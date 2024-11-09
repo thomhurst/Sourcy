@@ -25,6 +25,11 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
                 return location;
             }
             
+            if (File.Exists(Path.Combine(location.FullName, ".sourcyroot")))
+            {
+                return location;
+            }
+            
             var parent = location.Parent;
 
             if (parent is null || parent == location || parent == location.Root)
