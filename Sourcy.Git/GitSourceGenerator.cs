@@ -1,21 +1,14 @@
-#pragma warning disable RS1035
-
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Buffered;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Sourcy.Git;
 
 [Generator]
-internal class GitSourceGenerator : IIncrementalGenerator
+internal class GitSourceGenerator : BaseSourcyGenerator
 {
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public override void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterSourceOutput(context.CompilationProvider, (productionContext, compilation) =>
         {
@@ -28,8 +21,8 @@ internal class GitSourceGenerator : IIncrementalGenerator
         var location = GetLocation(compilation);
 
         await Task.WhenAll(
-            RootDirectory(productionContext, location),
-            BranchName(productionContext, location)
+            RootDirectory(productionContext, location.FullName),
+            BranchName(productionContext, location.FullName)
             );
     }
 
@@ -77,21 +70,5 @@ internal class GitSourceGenerator : IIncrementalGenerator
                   """
             ));
         }
-    }
-
-    private static string? GetLocation(Compilation compilation)
-    {
-        var assemblyLocations = compilation.Assembly.Locations;
-
-        var fileLocation = assemblyLocations
-                               .FirstOrDefault(x => x.Kind is LocationKind.MetadataFile)
-                           ?? assemblyLocations.First();
-
-        return Directory.GetParent(fileLocation.GetLineSpan().Path)!.FullName;
-    }
-
-    private static SourceText GetSourceText([StringSyntax("c#")] string code)
-    {
-        return SourceText.From(code, Encoding.UTF8);
     }
 }
