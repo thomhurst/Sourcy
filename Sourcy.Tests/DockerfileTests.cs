@@ -9,6 +9,7 @@ public class DockerfileTests
     {
         var root = Sourcy.Docker.Dockerfiles.MongoDB;
 
-        await Assert.That(root.Name).IsEqualTo("Sourcy.DotNet.csproj");
+        await Assert.That(root.Name).IsEqualTo("Dockerfile");
+        await Assert.That(root.Directory!.Name).IsEqualTo("MongoDB");
     }
 }
