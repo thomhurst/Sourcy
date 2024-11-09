@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Sourcy.Git;
 
 [Generator]
-public class GitSourceGenerator : IIncrementalGenerator
+internal class GitSourceGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

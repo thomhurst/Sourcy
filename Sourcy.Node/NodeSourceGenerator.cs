@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Sourcy.Node;
 
 [Generator]
-public class NodeSourceGenerator : IIncrementalGenerator
+internal class NodeSourceGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

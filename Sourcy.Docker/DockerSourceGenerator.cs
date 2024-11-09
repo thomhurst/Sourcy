@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Sourcy.Docker;
 
 [Generator]
-public class DockerSourceGenerator : IIncrementalGenerator
+internal class DockerSourceGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

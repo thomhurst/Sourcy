@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Sourcy.DotNet;
 
 [Generator]
-public class DotNetSourceGenerator : IIncrementalGenerator
+internal class DotNetSourceGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
