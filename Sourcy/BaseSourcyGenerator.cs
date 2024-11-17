@@ -19,6 +19,8 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         {
             // IsDebug = compilation.Options.OptimizationLevel == OptimizationLevel.Debug;
         });
+
+        InitializeInternal(context);
     }
 
     protected abstract void InitializeInternal(IncrementalGeneratorInitializationContext context);
