@@ -14,9 +14,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-#if DEBUG_SOURCY
-        global::System.Diagnostics.Debugger.Launch();
-#endif
+        Debugger.Launch();
         
         InitializeInternal(context);
     }
