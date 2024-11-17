@@ -1,12 +1,10 @@
 #pragma warning disable RS1035
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Sourcy;
@@ -15,12 +13,13 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var valuesProvider = context.CompilationProvider
-            .Select(static (compilation, _) => new CompilationWrapper(compilation));
+        var valuesProvider = context.SyntaxProvider.CreateSyntaxProvider(static (_, _) => true,
+                static (context, _) => new CompilationWrapper(context.SemanticModel.Compilation))
+            .Collect();
         
-        context.RegisterSourceOutput(valuesProvider, (sourceProductionContext, compilation) =>
+        context.RegisterSourceOutput(valuesProvider, (sourceProductionContext, compilations) =>
         {
-            InitializeInternal(sourceProductionContext, compilation.Compilation);
+            InitializeInternal(sourceProductionContext, compilations.First().Compilation);
         });
     }
 
