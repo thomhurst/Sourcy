@@ -14,7 +14,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        Debugger.Launch();
+        // Debugger.Launch();
         
         InitializeInternal(context);
     }
