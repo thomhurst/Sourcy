@@ -8,7 +8,7 @@ namespace Sourcy.Node;
 [Generator]
 internal class NodeSourceGenerator : BaseSourcyGenerator
 {
-    public override void Initialize(IncrementalGeneratorInitializationContext context)
+    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterSourceOutput(context.CompilationProvider, Execute);
     }

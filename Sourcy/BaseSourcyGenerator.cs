@@ -11,8 +11,18 @@ namespace Sourcy;
 
 public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
-    public abstract void Initialize(IncrementalGeneratorInitializationContext context);
-    
+    protected bool IsDebug { get; private set; } = true;
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        context.RegisterSourceOutput(context.CompilationProvider, (_, compilation) =>
+        {
+            // IsDebug = compilation.Options.OptimizationLevel == OptimizationLevel.Debug;
+        });
+    }
+
+    protected abstract void InitializeInternal(IncrementalGeneratorInitializationContext context);
+
     protected static DirectoryInfo GetRootDirectory(Compilation compilation)
     {
         var location = GetLocation(compilation);

@@ -7,7 +7,7 @@ namespace Sourcy.Docker;
 [Generator]
 internal class DockerSourceGenerator : BaseSourcyGenerator
 {
-    public override void Initialize(IncrementalGeneratorInitializationContext context)
+    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterSourceOutput(context.CompilationProvider, Execute);
     }

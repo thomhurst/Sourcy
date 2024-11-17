@@ -7,7 +7,7 @@ namespace Sourcy.DotNet;
 [Generator]
 internal class DotNetSourceGenerator : BaseSourcyGenerator
 {
-    public override void Initialize(IncrementalGeneratorInitializationContext context)
+    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterSourceOutput(context.CompilationProvider, (productionContext, compilation) =>
         {
@@ -15,17 +15,32 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         });
     }
 
-    private static void Execute(SourceProductionContext productionContext, Compilation compilation)
+    private void Execute(SourceProductionContext productionContext, Compilation compilation)
     {
         var root = GetRootDirectory(compilation);
 
+        if (IsDebug)
+        {
+            productionContext.AddSource($"Sourcy-DotNet-RootDirectory-{Guid.NewGuid():N}.txt", root.FullName);
+        }
+
         foreach (var project in root.EnumerateFiles("**.*sproj", SearchOption.AllDirectories))
         {
+            if (IsDebug)
+            {
+                productionContext.AddSource($"Sourcy-DotNet-Project-{Guid.NewGuid():N}.txt", project.FullName);
+            }
+
             WriteProject(productionContext, project);
         }
         
         foreach (var solution in root.EnumerateFiles("**.sln", SearchOption.AllDirectories))
         {
+            if (IsDebug)
+            {
+                productionContext.AddSource($"Sourcy-DotNet-Solution-{Guid.NewGuid():N}.txt", solution.FullName);
+            }
+            
             WriteSolution(productionContext, solution);
         }
     }
