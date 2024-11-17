@@ -7,34 +7,26 @@ namespace Sourcy.DotNet;
 [Generator]
 internal class DotNetSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
-    {
-        context.RegisterSourceOutput(context.CompilationProvider, (productionContext, compilation) =>
-        {
-            Execute(productionContext, compilation);
-        });
-    }
-
-    private void Execute(SourceProductionContext productionContext, Compilation compilation)
+    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
     {
         var root = GetRootDirectory(compilation);
 
         foreach (var project in root.EnumerateFiles("**.*sproj", SearchOption.AllDirectories))
         {
-            WriteProject(productionContext, project);
+            WriteProject(context, project);
         }
         
         foreach (var solution in root.EnumerateFiles("**.sln", SearchOption.AllDirectories))
         {
-            WriteSolution(productionContext, solution);
+            WriteSolution(context, solution);
         }
     }
 
-    private static void WriteProject(SourceProductionContext productionContext, FileInfo project)
+    private static void WriteProject(SourceProductionContext context, FileInfo project)
     {
         var formattedName = Path.GetFileNameWithoutExtension(project.FullName).Replace('.', '_');
         
-        productionContext.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
+        context.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
               namespace Sourcy.DotNet;
 
@@ -46,11 +38,11 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         ));
     }
     
-    private static void WriteSolution(SourceProductionContext productionContext, FileInfo solution)
+    private static void WriteSolution(SourceProductionContext context, FileInfo solution)
     {
         var formattedName = Path.GetFileNameWithoutExtension(solution.FullName).Replace('.', '_');
         
-        productionContext.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
+        context.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
               namespace Sourcy.DotNet;
 

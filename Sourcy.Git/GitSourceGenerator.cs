@@ -8,25 +8,22 @@ namespace Sourcy.Git;
 [Generator]
 internal class GitSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
-    {
-        context.RegisterSourceOutput(context.CompilationProvider, (productionContext, compilation) =>
-        {
-            ExecuteAsync(productionContext, compilation).GetAwaiter().GetResult();
-        });
+    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
+    { 
+        ExecuteAsync(context, compilation).GetAwaiter().GetResult();
     }
 
-    private static async Task ExecuteAsync(SourceProductionContext productionContext, Compilation compilation)
+    private static async Task ExecuteAsync(SourceProductionContext context, Compilation compilation)
     {
         var location = GetLocation(compilation);
 
         await Task.WhenAll(
-            RootDirectory(productionContext, location.FullName),
-            BranchName(productionContext, location.FullName)
+            RootDirectory(context, location.FullName),
+            BranchName(context, location.FullName)
             );
     }
 
-    private static async Task RootDirectory(SourceProductionContext productionContext, string? location)
+    private static async Task RootDirectory(SourceProductionContext context, string? location)
     {
         var root = await Cli.Wrap("git")
             .WithArguments(["rev-parse", "--show-toplevel"])
@@ -36,7 +33,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
         if (root.IsSuccess && !string.IsNullOrWhiteSpace(root.StandardOutput))
         {
-            productionContext.AddSource("GitRootExtensions.g.cs", GetSourceText(
+            context.AddSource("GitRootExtensions.g.cs", GetSourceText(
                 $$"""
                   namespace Sourcy;
 
@@ -49,7 +46,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
         }
     }
     
-    private static async Task BranchName(SourceProductionContext productionContext, string? location)
+    private static async Task BranchName(SourceProductionContext context, string? location)
     {
         var root = await Cli.Wrap("git")
             .WithArguments(["rev-parse", "--abbrev-ref", "HEAD"])
@@ -59,7 +56,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
         if (root.IsSuccess && !string.IsNullOrWhiteSpace(root.StandardOutput))
         {
-            productionContext.AddSource("GitBranchNameExtensions.g.cs", GetSourceText(
+            context.AddSource("GitBranchNameExtensions.g.cs", GetSourceText(
                 $$"""
                   namespace Sourcy;
 

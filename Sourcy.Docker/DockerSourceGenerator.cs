@@ -7,26 +7,21 @@ namespace Sourcy.Docker;
 [Generator]
 internal class DockerSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
-    {
-        context.RegisterSourceOutput(context.CompilationProvider, Execute);
-    }
-
-    private static void Execute(SourceProductionContext productionContext, Compilation compilation)
+    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
     {
         var root = GetRootDirectory(compilation);
 
         foreach (var project in root.EnumerateFiles("Dockerfile", SearchOption.AllDirectories))
         {
-            WriteDockerfile(productionContext, project);
+            WriteDockerfile(context, project);
         }
     }
 
-    private static void WriteDockerfile(SourceProductionContext productionContext, FileInfo project)
+    private static void WriteDockerfile(SourceProductionContext context, FileInfo project)
     {
         var formattedName = project.Directory!.Name.Replace('.', '_');
         
-        productionContext.AddSource($"DockerFileExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
+        context.AddSource($"DockerFileExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
               namespace Sourcy.Docker;
 

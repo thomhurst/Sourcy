@@ -8,19 +8,14 @@ namespace Sourcy.Node;
 [Generator]
 internal class NodeSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(IncrementalGeneratorInitializationContext context)
-    {
-        context.RegisterSourceOutput(context.CompilationProvider, Execute);
-    }
-
-    private static void Execute(SourceProductionContext productionContext, Compilation compilation)
+    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
     {
         var root = GetRootDirectory(compilation);
 
         foreach (var packageJson in root.EnumerateFiles("package.json", SearchOption.AllDirectories)
                      .Where(x => !IsInNodeModules(x)))
         {
-            WriteProject(productionContext, packageJson.Directory!);
+            WriteProject(context, packageJson.Directory!);
         }
     }
 
@@ -41,11 +36,11 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
         return false;
     }
 
-    private static void WriteProject(SourceProductionContext productionContext, DirectoryInfo projectDirectory)
+    private static void WriteProject(SourceProductionContext context, DirectoryInfo projectDirectory)
     {
         var formattedName = projectDirectory.Name.Replace('.', '_');
         
-        productionContext.AddSource($"NodeProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
+        context.AddSource($"NodeProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
               namespace Sourcy.Node;
 

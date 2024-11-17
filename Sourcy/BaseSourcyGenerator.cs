@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Sourcy;
@@ -14,12 +15,16 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Debugger.Launch();
+        var valuesProvider = context.CompilationProvider
+            .Select(static (compilation, _) => new CompilationWrapper(compilation));
         
-        InitializeInternal(context);
+        context.RegisterSourceOutput(valuesProvider, (sourceProductionContext, compilation) =>
+        {
+            InitializeInternal(sourceProductionContext, compilation.Compilation);
+        });
     }
 
-    protected abstract void InitializeInternal(IncrementalGeneratorInitializationContext context);
+    protected abstract void InitializeInternal(SourceProductionContext context, Compilation compilation);
 
     protected static DirectoryInfo GetRootDirectory(Compilation compilation)
     {
