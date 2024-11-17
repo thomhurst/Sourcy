@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Sourcy;
 
-[Generator]
 public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public abstract void Initialize(IncrementalGeneratorInitializationContext context);
