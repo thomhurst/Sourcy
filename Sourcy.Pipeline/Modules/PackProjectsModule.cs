@@ -20,6 +20,7 @@ public class PackProjectsModule : Module<CommandResult[]>
 
         IEnumerable<FileInfo> projects =
             [
+                Sourcy.DotNet.Projects.Sourcy,
                 Sourcy.DotNet.Projects.Sourcy_DotNet,
                 Sourcy.DotNet.Projects.Sourcy_Git,
                 Sourcy.DotNet.Projects.Sourcy_Node,

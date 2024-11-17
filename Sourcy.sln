@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy.Node", "Sourcy.Node\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy.Pipeline", "Sourcy.Pipeline\Sourcy.Pipeline.csproj", "{E3B9F70F-11FB-496E-822E-94C70DDE1F02}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy", "Sourcy\Sourcy\Sourcy.csproj", "{C8A404C8-AFD4-40EC-979F-790ADB19BEB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy", "Sourcy\Sourcy.csproj", "{C8A404C8-AFD4-40EC-979F-790ADB19BEB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
