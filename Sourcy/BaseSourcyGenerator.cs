@@ -1,5 +1,6 @@
 #pragma warning disable RS1035
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -11,15 +12,12 @@ namespace Sourcy;
 
 public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
-    protected bool IsDebug { get; private set; } = true;
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterSourceOutput(context.CompilationProvider, (_, compilation) =>
-        {
-            // IsDebug = compilation.Options.OptimizationLevel == OptimizationLevel.Debug;
-        });
-
+#if DEBUG_SOURCY
+        global::System.Diagnostics.Debugger.Launch();
+#endif
+        
         InitializeInternal(context);
     }
 

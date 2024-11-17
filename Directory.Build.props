@@ -5,4 +5,8 @@
             OutputItemType="Analyzer" ReferenceOutputAssembly="true"
             PrivateAssets="all" />
     </ItemGroup>
+
+    <PropertyGroup Condition="'$(DebugSourcy)' == 'true'">
+        <DefineConstants>$(DefineConstants);DEBUG_SOURCY</DefineConstants>
+    </PropertyGroup>
 </Project>

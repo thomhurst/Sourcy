@@ -19,28 +19,13 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
     {
         var root = GetRootDirectory(compilation);
 
-        if (IsDebug)
-        {
-            productionContext.AddSource($"Sourcy-DotNet-RootDirectory-{Guid.NewGuid():N}.txt", "// " + root.FullName);
-        }
-
         foreach (var project in root.EnumerateFiles("**.*sproj", SearchOption.AllDirectories))
         {
-            if (IsDebug)
-            {
-                productionContext.AddSource($"Sourcy-DotNet-Project-{Guid.NewGuid():N}.txt", "// " + project.FullName);
-            }
-
             WriteProject(productionContext, project);
         }
         
         foreach (var solution in root.EnumerateFiles("**.sln", SearchOption.AllDirectories))
         {
-            if (IsDebug)
-            {
-                productionContext.AddSource($"Sourcy-DotNet-Solution-{Guid.NewGuid():N}.txt", "// " + solution.FullName);
-            }
-            
             WriteSolution(productionContext, solution);
         }
     }
