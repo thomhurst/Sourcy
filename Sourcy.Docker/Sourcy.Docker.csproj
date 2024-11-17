@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Sourcy\Sourcy\Sourcy.csproj" />
+      <ProjectReference Include="..\Sourcy\Sourcy.csproj" />
     </ItemGroup>
 
 
