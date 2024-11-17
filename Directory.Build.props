@@ -2,6 +2,6 @@
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy'">
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
-            OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+            OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
 </Project>
