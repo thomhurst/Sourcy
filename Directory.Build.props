@@ -9,4 +9,18 @@
     <PropertyGroup Condition="'$(DebugSourcy)' == 'true'">
         <DefineConstants>$(DefineConstants);DEBUG_SOURCY</DefineConstants>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+      </PropertyGroup>
+
+      <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="8.0.0" />
+      </ItemGroup>
 </Project>
