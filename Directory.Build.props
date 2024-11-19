@@ -11,6 +11,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
+        <DevelopmentDependency>true</DevelopmentDependency>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>

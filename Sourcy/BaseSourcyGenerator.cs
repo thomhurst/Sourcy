@@ -13,14 +13,8 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var valuesProvider = context.SyntaxProvider.CreateSyntaxProvider(static (_, _) => true,
-                static (context, _) => new CompilationWrapper(context.SemanticModel.Compilation))
-            .Collect();
-        
-        context.RegisterSourceOutput(valuesProvider, (sourceProductionContext, compilations) =>
-        {
-            InitializeInternal(sourceProductionContext, compilations.First().Compilation);
-        });
+        context.RegisterSourceOutput(context.CompilationProvider.WithComparer(new CompilationComparer()),
+            InitializeInternal);
     }
 
     protected abstract void InitializeInternal(SourceProductionContext context, Compilation compilation);
