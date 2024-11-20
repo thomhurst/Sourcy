@@ -15,6 +15,7 @@ public class AttributeGenerator : IIncrementalGenerator
             postInitializationContext.AddSource("EnableSourcyAttribute.g.cs", """
                                                             namespace Sourcy;
                                                             
+                                                            [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
                                                             [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
                                                             [System.AttributeUsage(System.AttributeTargets.Assembly)]
                                                             public class EnableSourcyAttribute(string FilePath) : System.Attribute;
