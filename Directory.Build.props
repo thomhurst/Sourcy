@@ -1,5 +1,6 @@
 <Project>
-    <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
+    <ItemGroup
+        Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
             OutputItemType="Analyzer"
@@ -9,19 +10,26 @@
         <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
             <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
         </AssemblyAttribute>
+
+        <ProjectReference
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" 
+            OutputItemType="Analyzer"
+            ReferenceOutputAssembly="true"/>
+
+        <None
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
-        <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
-    </ItemGroup>
+    <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
+        <DevelopmentDependency>true</DevelopmentDependency>
+    </PropertyGroup>
 
     <PropertyGroup Condition="'$(DebugSourcy)' == 'true'">
         <DefineConstants>$(DefineConstants);DEBUG_SOURCY</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup>
-        <DevelopmentDependency>true</DevelopmentDependency>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
