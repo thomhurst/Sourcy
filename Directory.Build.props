@@ -23,7 +23,7 @@
 
         <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
             <Pack>true</Pack>
-            <PackagePath>build/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
+            <PackagePath>buildTransitive/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
         </None>
 
     </ItemGroup>
