@@ -5,7 +5,7 @@
     </ItemGroup>
     <ItemGroup>
         <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute" >
-            <_Parameter1>$(OutDir)</_Parameter1>
+            <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
 </Project>

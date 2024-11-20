@@ -1,5 +1,6 @@
 #pragma warning disable RS1035
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -17,10 +18,9 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         var incrementalValuesProvider = context.SyntaxProvider
                 .ForAttributeWithMetadataName("Sourcy.EnableSourcyAttribute", 
                     static (_, _) => true, 
-                    static (syntaxContext, _) => (string)syntaxContext.Attributes.First().ConstructorArguments.First().Value!)
-                .Collect();
+                    static (syntaxContext, _) => (string)syntaxContext.Attributes.First().ConstructorArguments.First().Value!);
         
-        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, paths) => Initialize(productionContext, GetRootDirectory(paths.First())));
+        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, path) => Initialize(productionContext, GetRootDirectory(path)));
     }
 
     protected abstract void Initialize(SourceProductionContext context, Root root);
