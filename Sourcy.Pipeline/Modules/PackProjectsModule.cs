@@ -44,6 +44,7 @@ public class PackProjectsModule : Module<CommandResult[]>
             {
                 ("PackageVersion", packageVersion),
                 ("Version", packageVersion),
+                ("IsPack", "true")
             },
         }, cancellationToken);
     }

@@ -12,19 +12,19 @@
         </AssemblyAttribute>
 
         <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" 
+            Condition="'$(IsPack)' != 'true'"
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj"
             OutputItemType="Analyzer"
-            ReferenceOutputAssembly="true"/>
+            ReferenceOutputAssembly="true" />
 
-        <None
-            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
-            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <ProjectReference
+            Condition="'$(IsPack)' == 'true'" />
 
         <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
             <Pack>true</Pack>
             <PackagePath>build/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
         </None>
-        
+
     </ItemGroup>
 
     <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
