@@ -11,14 +11,17 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
     {
         var root = GetRootDirectory(compilation);
 
-        foreach (var project in root.EnumerateFiles("**.*sproj", SearchOption.AllDirectories))
+        foreach (var file in root.EnumerateFiles())
         {
-            WriteProject(context, project);
-        }
-        
-        foreach (var solution in root.EnumerateFiles("**.sln", SearchOption.AllDirectories))
-        {
-            WriteSolution(context, solution);
+            if (file.Extension is ".csproj" or ".fsproj")
+            {
+                WriteProject(context, file);
+            }
+            
+            if (file.Extension is ".sln" or ".slnx")
+            {
+                WriteSolution(context, file);
+            }
         }
     }
 

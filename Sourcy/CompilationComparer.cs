@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Sourcy;
 
-public struct CompilationComparer : IEqualityComparer<Compilation>
+internal struct CompilationComparer : IEqualityComparer<Compilation>
 {
     public bool Equals(Compilation x, Compilation y)
     {

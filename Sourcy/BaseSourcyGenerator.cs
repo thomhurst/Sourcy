@@ -19,7 +19,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 
     protected abstract void InitializeInternal(SourceProductionContext context, Compilation compilation);
 
-    protected static DirectoryInfo GetRootDirectory(Compilation compilation)
+    protected static Root GetRootDirectory(Compilation compilation)
     {
         var location = GetLocation(compilation);
 
@@ -27,19 +27,19 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         {
             if (Directory.Exists(Path.Combine(location.FullName, ".git")))
             {
-                return location;
+                return new Root(location);
             }
             
             if (File.Exists(Path.Combine(location.FullName, ".sourcyroot")))
             {
-                return location;
+                return new Root(location);
             }
             
             var parent = location.Parent;
 
             if (parent is null || parent == location || parent == location.Root)
             {
-                return location;
+                return new Root(location);
             }
 
             location = parent;

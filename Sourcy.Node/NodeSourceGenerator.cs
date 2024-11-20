@@ -12,7 +12,8 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
     {
         var root = GetRootDirectory(compilation);
 
-        foreach (var packageJson in root.EnumerateFiles("package.json", SearchOption.AllDirectories)
+        foreach (var packageJson in root.EnumerateFiles()
+                     .Where(x => x.Name is "package.json")
                      .Where(x => !IsInNodeModules(x)))
         {
             WriteProject(context, packageJson.Directory!);

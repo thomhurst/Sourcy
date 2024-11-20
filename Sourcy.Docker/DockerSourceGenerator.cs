@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Sourcy.Docker;
@@ -11,7 +12,8 @@ internal class DockerSourceGenerator : BaseSourcyGenerator
     {
         var root = GetRootDirectory(compilation);
 
-        foreach (var project in root.EnumerateFiles("Dockerfile", SearchOption.AllDirectories))
+        foreach (var project in root.EnumerateFiles()
+                     .Where(x => x.Name is "Dockerfile"))
         {
             WriteDockerfile(context, project);
         }
