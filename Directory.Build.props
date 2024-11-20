@@ -18,7 +18,8 @@
             ReferenceOutputAssembly="true" />
 
         <ProjectReference
-            Condition="'$(IsPack)' == 'true'" />
+            Condition="'$(IsPack)' == 'true'"
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
 
         <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
             <Pack>true</Pack>
