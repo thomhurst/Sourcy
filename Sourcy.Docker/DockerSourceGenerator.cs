@@ -8,10 +8,8 @@ namespace Sourcy.Docker;
 [Generator]
 internal class DockerSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
+    protected override void Initialize(SourceProductionContext context, Root root)
     {
-        var root = GetRootDirectory(compilation);
-
         foreach (var project in root.EnumerateFiles()
                      .Where(x => x.Name is "Dockerfile"))
         {

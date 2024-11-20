@@ -8,18 +8,16 @@ namespace Sourcy.Git;
 [Generator]
 internal class GitSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
+    protected override void Initialize(SourceProductionContext context, Root root)
     { 
-        ExecuteAsync(context, compilation).GetAwaiter().GetResult();
+        ExecuteAsync(context, root).GetAwaiter().GetResult();
     }
 
-    private static async Task ExecuteAsync(SourceProductionContext context, Compilation compilation)
+    private static async Task ExecuteAsync(SourceProductionContext context, Root root)
     {
-        var location = GetLocation(compilation);
-
         await Task.WhenAll(
-            RootDirectory(context, location.FullName),
-            BranchName(context, location.FullName)
+            RootDirectory(context, root.Directory.FullName),
+            BranchName(context, root.Directory.FullName)
             );
     }
 

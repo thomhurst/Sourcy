@@ -2,8 +2,15 @@
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy'">
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
-            OutputItemType="Analyzer" ReferenceOutputAssembly="true"
-            PrivateAssets="all" />
+            OutputItemType="Analyzer"
+            ReferenceOutputAssembly="true" />
+
+        <ProjectReference
+            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
+
+        <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
+            <_Parameter1>$(OutDir)</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
     <PropertyGroup Condition="'$(DebugSourcy)' == 'true'">
@@ -19,9 +26,9 @@
 
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-      </PropertyGroup>
+    </PropertyGroup>
 
-      <ItemGroup>
+    <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="8.0.0" />
-      </ItemGroup>
+    </ItemGroup>
 </Project>

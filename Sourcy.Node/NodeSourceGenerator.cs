@@ -8,10 +8,8 @@ namespace Sourcy.Node;
 [Generator]
 internal class NodeSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
+    protected override void Initialize(SourceProductionContext context, Root root)
     {
-        var root = GetRootDirectory(compilation);
-
         foreach (var packageJson in root.EnumerateFiles()
                      .Where(x => x.Name is "package.json")
                      .Where(x => !IsInNodeModules(x)))

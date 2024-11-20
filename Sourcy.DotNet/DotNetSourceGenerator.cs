@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.CodeAnalysis;
 
@@ -7,10 +8,8 @@ namespace Sourcy.DotNet;
 [Generator]
 internal class DotNetSourceGenerator : BaseSourcyGenerator
 {
-    protected override void InitializeInternal(SourceProductionContext context, Compilation compilation)
+    protected override void Initialize(SourceProductionContext context, Root root)
     {
-        var root = GetRootDirectory(compilation);
-
         foreach (var file in root.EnumerateFiles())
         {
             if (file.Extension is ".csproj" or ".fsproj")

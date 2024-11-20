@@ -3,4 +3,9 @@
         <None Include="$(OutDir)\Sourcy.dll"
                 Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute" >
+            <_Parameter1>$(OutDir)</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>
