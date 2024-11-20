@@ -38,7 +38,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
       - name: Run Pipeline
-        run: dotnet run -c Release --framework net8.0
+        run: dotnet run -c Release
         working-directory: "Sourcy.Pipeline"
         env:
           NuGet__ApiKey: ${{ github.ref == 'refs/heads/main' && secrets.NUGET__APIKEY || null }}

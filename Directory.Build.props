@@ -3,10 +3,8 @@
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
             OutputItemType="Analyzer"
-            ReferenceOutputAssembly="true" />
-
-        <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
+            ReferenceOutputAssembly="true" 
+            PrivateAssets="All"/>
 
         <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
             <_Parameter1>$(OutDir)</_Parameter1>
