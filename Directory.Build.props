@@ -19,7 +19,7 @@
         <None
             Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
             Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
->
+
         <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
             <Pack>true</Pack>
             <PackagePath>build/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
