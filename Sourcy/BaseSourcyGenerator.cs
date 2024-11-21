@@ -18,9 +18,10 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         var incrementalValuesProvider = context.SyntaxProvider
                 .ForAttributeWithMetadataName("Sourcy.EnableSourcyAttribute", 
                     static (_, _) => true, 
-                    static (syntaxContext, _) => (string)syntaxContext.Attributes.First().ConstructorArguments.First().Value!);
+                    static (syntaxContext, _) => (string)syntaxContext.Attributes.First().ConstructorArguments.First().Value!)
+                .Collect();
         
-        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, path) => Initialize(productionContext, GetRootDirectory(path)));
+        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, paths) => Initialize(productionContext, GetRootDirectory(paths[0])));
     }
 
     protected abstract void Initialize(SourceProductionContext context, Root root);
