@@ -49,7 +49,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             
             var parent = location.Parent;
 
-            if (parent is null || parent == location)
+            if (parent is null || parent == location.Root)
             {
                 return new Root(location);
             }
