@@ -57,7 +57,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             location = parent;
         }
 
-        return location;
+        return new Root(location);
     }
 
     protected static DirectoryInfo GetLocation(string path)
