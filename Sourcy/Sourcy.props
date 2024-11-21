@@ -8,8 +8,4 @@
             <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Sourcy.Core" VersionOverride="$(PackageVersion)"/>
-    </ItemGroup>
 </Project>

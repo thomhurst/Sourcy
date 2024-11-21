@@ -10,6 +10,12 @@
     <PackageReference Include="ModularPipelines.Git" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Sourcy.Core\Sourcy.Core.csproj" />
     <ProjectReference Include="..\Sourcy.DotNet\Sourcy.DotNet.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
+      <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>
