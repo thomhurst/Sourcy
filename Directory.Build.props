@@ -5,11 +5,6 @@
     <ProjectReference
       Condition="'$(IsPack)' == 'true'"
       Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
-
-    <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
-      <Pack>true</Pack>
-      <PackagePath>buildTransitive/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
-    </None>
   </ItemGroup>
 
   <ItemGroup>

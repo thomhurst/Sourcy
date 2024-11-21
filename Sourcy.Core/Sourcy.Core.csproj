@@ -6,4 +6,11 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)\Sourcy.props">
+            <Pack>true</Pack>
+            <PackagePath>buildTransitive/$(TargetFramework)/Sourcy.Core.props</PackagePath>
+        </None>
+    </ItemGroup>
+
 </Project>
