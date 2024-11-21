@@ -9,6 +9,12 @@
     <PackageId>Sourcy</PackageId>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="Sourcy.props">
+      <Pack>true</Pack>
+      <PackagePath>buildTransitive/$(TargetFramework)/</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
