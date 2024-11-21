@@ -1,7 +1,7 @@
 <Project>
     <ItemGroup
         Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
-        
+
         <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
             <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
         </AssemblyAttribute>
@@ -16,6 +16,13 @@
             <PackagePath>buildTransitive/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
         </None>
 
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Polyfill" Version="7.4.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
