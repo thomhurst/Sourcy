@@ -19,4 +19,9 @@
     <ProjectReference Include="..\Sourcy.Docker\Sourcy.Docker.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Sourcy.Node\Sourcy.Node.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
+      <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

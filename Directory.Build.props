@@ -1,9 +1,6 @@
 <Project>
   <ItemGroup
     Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
-    <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
-      <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
-    </AssemblyAttribute>
 
     <ProjectReference
       Condition="'$(IsPack)' == 'true'"
