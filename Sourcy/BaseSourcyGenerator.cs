@@ -32,6 +32,11 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 
         while (true)
         {
+            if (location == location.Root)
+            {
+                break;
+            }
+            
             if (Directory.Exists(Path.Combine(location.FullName, ".git")))
             {
                 return new Root(location);
@@ -44,13 +49,15 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             
             var parent = location.Parent;
 
-            if (parent is null || parent == location || parent == location.Root)
+            if (parent is null || parent == location)
             {
                 return new Root(location);
             }
 
             location = parent;
         }
+
+        return location;
     }
 
     protected static DirectoryInfo GetLocation(string path)
