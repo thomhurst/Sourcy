@@ -1,6 +1,4 @@
-using System.Threading.Tasks;
-
-namespace Sourcy.Tests;
+namespace Sourcy.NuGet.Tests;
 
 public class GitTests
 {

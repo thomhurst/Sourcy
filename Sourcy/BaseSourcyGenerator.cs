@@ -18,9 +18,10 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         var incrementalValuesProvider = context.SyntaxProvider
                 .ForAttributeWithMetadataName("Sourcy.EnableSourcyAttribute", 
                     static (_, _) => true, 
-                    static (syntaxContext, _) => (string)syntaxContext.Attributes.First().ConstructorArguments.First().Value!);
+                    static (syntaxContext, _) => (string)syntaxContext.Attributes.First().ConstructorArguments.First().Value!)
+                .Collect();
         
-        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, path) => Initialize(productionContext, GetRootDirectory(path)));
+        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, paths) => Initialize(productionContext, GetRootDirectory(paths[0])));
     }
 
     protected abstract void Initialize(SourceProductionContext context, Root root);
@@ -31,6 +32,11 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 
         while (true)
         {
+            if (location == location.Root)
+            {
+                break;
+            }
+            
             if (Directory.Exists(Path.Combine(location.FullName, ".git")))
             {
                 return new Root(location);
@@ -43,13 +49,15 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             
             var parent = location.Parent;
 
-            if (parent is null || parent == location || parent == location.Root)
+            if (parent is null || parent == location.Root)
             {
                 return new Root(location);
             }
 
             location = parent;
         }
+
+        return new Root(location);
     }
 
     protected static DirectoryInfo GetLocation(string path)
