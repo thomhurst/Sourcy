@@ -1,14 +1,23 @@
 <Project>
-  <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
+  <ItemGroup
+    Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
     <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
       <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
     </AssemblyAttribute>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj"/>
+
     <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
       <Pack>true</Pack>
       <PackagePath>buildTransitive/$(TargetFramework)/$(MSBuildProjectName).props</PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(IsRoslynComponent)' == 'true'">
+    <None Include="$(OutDir)\Sourcy.Core.dll"
+      Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Polyfill">
       <PrivateAssets>all</PrivateAssets>
