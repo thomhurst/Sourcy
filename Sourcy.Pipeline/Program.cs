@@ -19,20 +19,19 @@ await PipelineHostBuilder.Create()
     {
         collection.Configure<NuGetSettings>(context.Configuration.GetSection("NuGet"));
 
-        if (context.HostingEnvironment.IsDevelopment())
-        {
-            collection.AddModule<CreateLocalNugetFolderModule>()
-                .AddModule<AddLocalNugetSourceModule>()
-                .AddModule<UploadPackagesToLocalNuGetModule>();
-        }
-        else
+        if (!context.HostingEnvironment.IsDevelopment())
         {
             collection.AddModule<UploadPackagesToNugetModule>();
         }
+        
     })
+    .AddModule<CreateLocalNugetFolderModule>()
+    .AddModule<AddLocalNugetSourceModule>()
+    .AddModule<UploadPackagesToLocalNuGetModule>()
     .AddModule<RunUnitTestsModule>()
     .AddModule<NugetVersionGeneratorModule>()
     .AddModule<PackProjectsModule>()
     .AddModule<PackageFilesRemovalModule>()
     .AddModule<PackagePathsParserModule>()
+    .AddModule<TestNugetPackageModule>()
     .ExecutePipelineAsync();

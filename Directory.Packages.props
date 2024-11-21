@@ -1,0 +1,17 @@
+<Project>
+    <PropertyGroup>
+      <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="CliWrap" Version="3.6.7" />
+        <PackageVersion Include="GitVersion.MsBuild" Version="6.0.4" />
+        <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+        <PackageVersion Include="ModularPipelines.DotNet" Version="2.42.87" />
+        <PackageVersion Include="ModularPipelines.Git" Version="2.42.87" />
+        <PackageVersion Include="Polyfill" Version="7.4.0" />
+        <PackageVersion Include="TUnit" Version="0.2.195" />
+    </ItemGroup>
+</Project>
