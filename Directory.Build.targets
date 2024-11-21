@@ -5,6 +5,10 @@
             Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
         <None
+                Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+                Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <None
             Include="$(MSBuildProjectDirectory)\bin\$(Configuration)\netstandard2.0\$(MSBuildProjectName).dll"
             Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>

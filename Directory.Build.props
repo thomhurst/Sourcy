@@ -12,14 +12,9 @@
         </AssemblyAttribute>
 
         <ProjectReference
-            Condition="'$(IsPack)' != 'true'"
             Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj"
             OutputItemType="Analyzer"
             ReferenceOutputAssembly="true" />
-
-        <ProjectReference
-            Condition="'$(IsPack)' == 'true'"
-            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
 
         <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
             <Pack>true</Pack>
