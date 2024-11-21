@@ -5,8 +5,9 @@
       <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
     </AssemblyAttribute>
 
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj"
-      ExcludeAssets="runtime" />
+    <ProjectReference
+      Condition="'$(IsPack)' == 'true'"
+      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
 
     <None Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.props">
       <Pack>true</Pack>
