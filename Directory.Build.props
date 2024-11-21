@@ -1,12 +1,7 @@
 <Project>
     <ItemGroup
         Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
-        <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
-            OutputItemType="Analyzer"
-            ReferenceOutputAssembly="true"
-            PrivateAssets="All" />
-
+        
         <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
             <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
         </AssemblyAttribute>

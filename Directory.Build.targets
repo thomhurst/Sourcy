@@ -1,12 +1,11 @@
 <Project>
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
-        <None
-            Include="$(MSBuildThisFileDirectory)\Sourcy\bin\$(Configuration)\netstandard2.0\Sourcy.dll"
-            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <Compile Include="$(MSBuildThisFileDirectory)\Sourcy\*.cs"
+            Exclude="$(MSBuildThisFileDirectory)\Sourcy\obj\**\*.cs" />
 
         <None
-                Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
-                Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
         <None
             Include="$(MSBuildProjectDirectory)\bin\$(Configuration)\netstandard2.0\$(MSBuildProjectName).dll"
@@ -14,6 +13,6 @@
     </ItemGroup>
 
     <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
-      <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 </Project>
