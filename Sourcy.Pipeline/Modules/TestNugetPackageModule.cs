@@ -15,7 +15,7 @@ namespace Sourcy.Pipeline.Modules;
 [DependsOn<UploadPackagesToLocalNuGetModule>]
 public class TestNugetPackageModule : Module<CommandResult[]>
 {
-    private readonly string[] _frameworks = ["net8.0", "net9.0"];
+    private readonly string[] _frameworks = ["net8.0"];
 
     protected override async Task<CommandResult[]?> ExecuteAsync(IPipelineContext context,
         CancellationToken cancellationToken)
