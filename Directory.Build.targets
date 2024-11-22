@@ -4,6 +4,9 @@
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
 
+        <ProjectReference
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
+
     </ItemGroup>
 
     <PropertyGroup
