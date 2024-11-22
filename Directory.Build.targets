@@ -10,5 +10,6 @@
 
     <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
         <DevelopmentDependency>true</DevelopmentDependency>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 </Project>
