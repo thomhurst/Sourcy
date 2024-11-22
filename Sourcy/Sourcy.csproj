@@ -9,10 +9,10 @@
     <PackageId>Sourcy</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="Sourcy.props">
+    <Content Include="Sourcy.props">
       <Pack>true</Pack>
       <PackagePath>buildTransitive/$(TargetFramework)/</PackagePath>
-    </None>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
