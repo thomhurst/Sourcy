@@ -19,8 +19,7 @@ public class RunUnitTestsModule : Module<CommandResult>
     {
         var dotNetTestOptions = new DotNetTestOptions
         {
-            ProjectSolutionDirectoryDllExe = unitTestProjectFile.Path,
-            CommandLogging = CommandLogging.Input | CommandLogging.Error,
+            ProjectSolutionDirectoryDllExe = unitTestProjectFile.Path
         };
         
         return await context.DotNet().Test(dotNetTestOptions, cancellationToken);

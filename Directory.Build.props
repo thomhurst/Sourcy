@@ -1,10 +1,14 @@
 <Project>
   <ItemGroup
-    Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
+    Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
 
     <ProjectReference
       Condition="'$(IsPack)' == 'true'"
       Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
+
+    <None
+      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+      Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,20 +17,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
-    <DevelopmentDependency>true</DevelopmentDependency>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(DebugSourcy)' == 'true'">
-    <DefineConstants>$(DefineConstants);DEBUG_SOURCY</DefineConstants>
-  </PropertyGroup>
+
   <PropertyGroup>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
