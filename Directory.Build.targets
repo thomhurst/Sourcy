@@ -14,6 +14,6 @@
     </ItemGroup>
 
     <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(IsRoslynComponent)' == 'true'">
-        <DevelopmentDependency>true</DevelopmentDependency>
+        <!-- <DevelopmentDependency>true</DevelopmentDependency> -->
     </PropertyGroup>
 </Project>
