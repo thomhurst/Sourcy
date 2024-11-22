@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
-        <DevelopmentDependency>true</DevelopmentDependency>
+        <!-- <DevelopmentDependency>true</DevelopmentDependency> -->
         <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 </Project>
