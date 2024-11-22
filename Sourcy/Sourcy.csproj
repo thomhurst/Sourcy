@@ -8,14 +8,12 @@
     <RootNamespace>Sourcy</RootNamespace>
     <PackageId>Sourcy</PackageId>
   </PropertyGroup>
+
   <ItemGroup>
-
-    <None Include="$(OutDir)\Sourcy.dll"
-      Pack="true" PackagePath="analyzers/dotnet/cs" Visible="true" />
-
     <ProjectReference
       Include="..\Sourcy.Core\Sourcy.Core.csproj" />
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
       <PrivateAssets>all</PrivateAssets>
