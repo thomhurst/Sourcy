@@ -1,12 +1,4 @@
 <Project>
-  <ItemGroup
-    Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
-
-    <ProjectReference
-      Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
-      OutputItemType="Analyzer"
-      ReferenceOutputAssembly="true" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Polyfill">

@@ -1,7 +1,10 @@
 <Project>
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
+
         <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
+            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
+            OutputItemType="Analyzer"
+            ReferenceOutputAssembly="true" />
 
         <None
             Include="$(MSBuildProjectDirectory)\bin\$(Configuration)\netstandard2.0\$(MSBuildProjectName).dll"
