@@ -18,7 +18,7 @@
       Include="..\Sourcy.Core\Sourcy.Core.csproj" />
 
     <None
-      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+      Include="..\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
       Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
   <ItemGroup>
