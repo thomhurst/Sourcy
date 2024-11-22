@@ -5,6 +5,7 @@ using ModularPipelines.DotNet.Extensions;
 using ModularPipelines.DotNet.Options;
 using ModularPipelines.Models;
 using ModularPipelines.Modules;
+using Sourcy.DotNet;
 using File = ModularPipelines.FileSystem.File;
 
 namespace Sourcy.Pipeline.Modules;
@@ -39,7 +40,7 @@ public class PackProjectsModule : Module<CommandResult[]>
         {
             ProjectSolution = projectFile.Path,
             Configuration = Configuration.Release,
-            IncludeSource = false,
+            IncludeSource = projectFile == Projects.Sourcy_Core,
             Properties = new List<KeyValue>
             {
                 ("PackageVersion", packageVersion),
