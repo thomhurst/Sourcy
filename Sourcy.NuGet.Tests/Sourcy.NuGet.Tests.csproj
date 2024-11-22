@@ -18,25 +18,21 @@
   <ItemGroup>
     <PackageReference Include="Sourcy.Git">
       <VersionOverride Condition="'$(SourcyVersion)' != ''">$(SourcyVersion)</VersionOverride>
-      <VersionOverride>0.0.58</VersionOverride>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Sourcy.DotNet">
       <VersionOverride Condition="'$(SourcyVersion)' != ''">$(SourcyVersion)</VersionOverride>
-      <VersionOverride>0.0.58</VersionOverride>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Sourcy.Docker">
       <VersionOverride Condition="'$(SourcyVersion)' != ''">$(SourcyVersion)</VersionOverride>
-      <VersionOverride>0.0.58</VersionOverride>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Sourcy.Node">
       <VersionOverride Condition="'$(SourcyVersion)' != ''">$(SourcyVersion)</VersionOverride>
-      <VersionOverride>0.0.58</VersionOverride>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
