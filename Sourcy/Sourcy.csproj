@@ -9,10 +9,17 @@
     <PackageId>Sourcy</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="Sourcy.props">
-      <Pack>true</Pack>
-      <PackagePath>buildTransitive/$(TargetFramework)/</PackagePath>
-    </Content>
+
+    <None Include="$(OutDir)\Sourcy.dll"
+      Pack="true" PackagePath="analyzers/dotnet/cs" Visible="true" />
+
+    <ProjectReference
+      Condition="'$(IsPack)' == 'true'"
+      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
+
+    <None
+      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+      Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">

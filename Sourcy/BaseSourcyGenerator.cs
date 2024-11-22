@@ -15,8 +15,6 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        Debugger.Launch();
-        
         var incrementalValuesProvider = context.SyntaxProvider
                 .ForAttributeWithMetadataName("Sourcy.EnableSourcyAttribute", 
                     static (_, _) => true, 

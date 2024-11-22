@@ -4,11 +4,7 @@
 
     <ProjectReference
       Condition="'$(IsPack)' == 'true'"
-      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
-
-    <None
-      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
-      Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+      Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
   </ItemGroup>
 
   <ItemGroup>

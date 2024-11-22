@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Sourcy.DotNet\Sourcy.DotNet.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Sourcy.Docker\Sourcy.Docker.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Sourcy.Node\Sourcy.Node.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Sourcy\Sourcy.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
