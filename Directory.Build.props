@@ -3,8 +3,9 @@
     Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
 
     <ProjectReference
-      Condition="'$(IsPack)' == 'true'"
-      Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
+      Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="true" />
   </ItemGroup>
 
   <ItemGroup>
