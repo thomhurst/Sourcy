@@ -3,7 +3,7 @@
     Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
 
     <ProjectReference
-      Condition="$(IsPack)"
+      Condition="'$(IsPack)' == 'true'"
       Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
 
     <None
