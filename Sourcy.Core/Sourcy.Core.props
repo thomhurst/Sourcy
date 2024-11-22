@@ -1,6 +1,10 @@
 <Project>
     <ItemGroup>
-        <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute" >
+        <None
+            Include="$(MSBuildThisFileDirectory)\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
+            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="true" />
+
+        <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
             <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
