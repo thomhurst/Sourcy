@@ -14,9 +14,9 @@
             Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
             Pack="true" PackagePath="analyzers/dotnet/cs" Visible="true" />
 
-        <!-- <None
+        <None
             Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
-            Pack="true" PackagePath="lib" Visible="true" /> -->
+            Pack="true" PackagePath="lib" Visible="true" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
