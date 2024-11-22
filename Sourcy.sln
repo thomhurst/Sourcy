@@ -16,7 +16,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy", "Sourcy\Sourcy.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy.Core", "Sourcy.Core\Sourcy.Core.csproj", "{A31BFDA8-5E1E-4DE7-89BE-1D3F4C97E7D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy.NuGet.Tests", "Sourcy.NuGet.Tests\Sourcy.NuGet.Tests.csproj", "{77823D45-290A-438F-A845-352DA191F0B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sourcy.NuGet.Tests", "Utils\Sourcy.NuGet.Tests\Sourcy.NuGet.Tests.csproj", "{77823D45-290A-438F-A845-352DA191F0B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
