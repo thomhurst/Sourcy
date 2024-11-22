@@ -15,7 +15,7 @@
 
     <ProjectReference
       Condition="'$(IsPack)' == 'true'"
-      Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
+      Include="..\Sourcy.Core\Sourcy.Core.csproj" />
 
     <None
       Include="$(MSBuildThisFileDirectory)\Sourcy.Core\bin\$(Configuration)\netstandard2.0\Sourcy.Core.dll"
