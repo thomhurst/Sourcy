@@ -13,7 +13,7 @@
             Pack="true" PackagePath="analyzers/dotnet/cs" Visible="true" />
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
+    <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(IsRoslynComponent)' == 'true'">
         <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
 </Project>
