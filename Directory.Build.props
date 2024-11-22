@@ -1,6 +1,6 @@
 <Project>
   <ItemGroup
-    Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
+    Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(MSBuildProjectName)' != 'Sourcy.Core'">
 
     <ProjectReference
       Condition="'$(IsPack)' == 'true'"
