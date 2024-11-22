@@ -1,15 +1,24 @@
 <Project>
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
-        <Compile Include="$(MSBuildThisFileDirectory)\Sourcy\*.cs"
-            Exclude="$(MSBuildThisFileDirectory)\Sourcy\obj\**\*.cs" />
 
-        <None
-            Include="$(MSBuildProjectDirectory)\bin\$(Configuration)\netstandard2.0\$(MSBuildProjectName).dll"
-            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <ProjectReference
+            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
+
+        <ProjectReference
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
+
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
-        <DevelopmentDependency>true</DevelopmentDependency>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PropertyGroup
+        Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(IsRoslynComponent)' == 'true'">
+        <!-- <DevelopmentDependency>true</DevelopmentDependency> -->
     </PropertyGroup>
+
+    <ItemGroup Condition="'$(IsRoslynComponent)' == 'true'">
+        <None Include="$(OutDir)\Sourcy.dll"
+            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <None Include="$(OutDir)\$(MSBuildProjectName).dll"
+            Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
 </Project>
