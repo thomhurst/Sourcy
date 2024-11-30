@@ -2,7 +2,9 @@
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
 
         <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
+            Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj"
+            OutputType="Analyzer"
+            ReferenceOutputAssembly="false" />
 
     </ItemGroup>
 
