@@ -4,6 +4,10 @@
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy\Sourcy.csproj" />
 
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
+
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
 
@@ -11,7 +15,7 @@
 
     <PropertyGroup
         Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(IsRoslynComponent)' == 'true'">
-        <!-- <DevelopmentDependency>true</DevelopmentDependency> -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(IsRoslynComponent)' == 'true'">
