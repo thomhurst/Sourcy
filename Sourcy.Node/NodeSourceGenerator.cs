@@ -11,10 +11,19 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
     protected override void Initialize(SourceProductionContext context, Root root)
     {
         foreach (var packageJson in root.EnumerateFiles()
-                     .Where(x => x.Name is "package.json")
-                     .Where(x => !IsInNodeModules(x)))
+                     .Where(x => x.Name is "package-lock.json")
+                     .Where(x => !IsInNodeModules(x))
+                     .Distinct())
         {
-            WriteProject(context, packageJson.Directory!);
+            WriteNpmProject(context, packageJson.Directory!);
+        }
+        
+        foreach (var yarnLock in root.EnumerateFiles()
+                     .Where(x => x.Name is "yarn.lock")
+                     .Where(x => !IsInNodeModules(x))
+                     .Distinct())
+        {
+            WriteYarnProject(context, yarnLock.Directory!);
         }
     }
 
@@ -35,13 +44,29 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
         return false;
     }
 
-    private static void WriteProject(SourceProductionContext context, DirectoryInfo projectDirectory)
+    private static void WriteNpmProject(SourceProductionContext context, DirectoryInfo projectDirectory)
     {
         var formattedName = projectDirectory.Name.Replace('.', '_');
         
-        context.AddSource($"NodeProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
+        context.AddSource($"NpmProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
-              namespace Sourcy.Node;
+              namespace Sourcy.Node.Npm;
+
+              internal static partial class Projects
+              {
+                  public static global::System.IO.DirectoryInfo {{formattedName}} { get; } = new global::System.IO.DirectoryInfo(@"{{projectDirectory.FullName}}");
+              }
+              """
+        ));
+    }
+    
+    private static void WriteYarnProject(SourceProductionContext context, DirectoryInfo projectDirectory)
+    {
+        var formattedName = projectDirectory.Name.Replace('.', '_');
+        
+        context.AddSource($"YarnProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
+            $$"""
+              namespace Sourcy.Node.Yarn;
 
               internal static partial class Projects
               {
