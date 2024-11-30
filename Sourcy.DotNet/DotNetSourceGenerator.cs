@@ -17,7 +17,7 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
                 WriteProject(context, file);
             }
             
-            if (file.Extension is ".sln" or ".slnx")
+            if (file.Extension is ".sln" or ".slnx" or ".slnf")
             {
                 WriteSolution(context, file);
             }
