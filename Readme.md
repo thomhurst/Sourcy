@@ -16,6 +16,7 @@ Attempts to find your Git directory by parsing the result of `git rev-parse --sh
 
 ## Sourcy.DotNet
 Searches for Projects with a `.csproj` or `.fsproj` extension
+
 Searches for Solutions with a `.sln`, `.slnx` or `.slnf` extension
 
 ## Sourcy.Node
