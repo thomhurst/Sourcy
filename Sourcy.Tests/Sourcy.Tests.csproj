@@ -4,6 +4,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>Sourcy.Tests</RootNamespace>
+    <!-- Do not warn about non-strong named dependencies, as we target .NET (not .NET Framework).
+         Once TUnit is strong named, we can remove this. -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild">
