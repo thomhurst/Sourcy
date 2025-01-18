@@ -60,8 +60,6 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 
     protected static string GetLocation(Compilation compilation)
     {
-        Debugger.Launch();
-        
         var assemblyLocations = compilation.Assembly.Locations;
 
         var fileLocation = GetFileLocation(assemblyLocations);
