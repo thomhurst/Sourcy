@@ -13,10 +13,10 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var rootDirectoryValuesProvider = context.CompilationProvider.Select((compilation, _) =>
-                GetLocation(compilation))
-            .Select((directory, _) => GetRootDirectory(directory.FullName));
-        
+        var rootDirectoryValuesProvider = context.CompilationProvider
+        .Select((compilation, _) => GetLocation(compilation))
+        .Select((directory, _) => GetRootDirectory(directory));
+
         context.RegisterSourceOutput(rootDirectoryValuesProvider, Initialize);
     }
 
@@ -32,17 +32,17 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             {
                 break;
             }
-            
+
             if (Directory.Exists(Path.Combine(location.FullName, ".git")))
             {
                 break;
             }
-            
+
             if (File.Exists(Path.Combine(location.FullName, ".sourcyroot")))
             {
                 break;
             }
-            
+
             var parent = location.Parent;
 
             if (parent is null || parent == location.Root)
@@ -60,8 +60,8 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     {
         return new FileInfo(path).Directory!;
     }
-    
-    protected static DirectoryInfo GetLocation(Compilation compilation)
+
+    protected static string GetLocation(Compilation compilation)
     {
         var assemblyLocations = compilation.Assembly.Locations;
 
@@ -69,7 +69,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
                                .FirstOrDefault(x => x.Kind is LocationKind.MetadataFile)
                            ?? assemblyLocations.First();
 
-        return Directory.GetParent(fileLocation.GetLineSpan().Path)!;
+        return Directory.GetParent(fileLocation.GetLineSpan().Path)!.FullName!;
     }
 
     protected static SourceText GetSourceText([StringSyntax("c#")] string code)
