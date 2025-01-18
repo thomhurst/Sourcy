@@ -1,11 +1,8 @@
 #pragma warning disable RS1035
 
-using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -16,24 +13,11 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var incrementalValuesProvider = context.SyntaxProvider
-                .ForAttributeWithMetadataName("Sourcy.EnableSourcyAttribute", 
-                    static (_, _) => true, 
-                    static (syntaxContext, _) =>
-                    {
-                        var attributeData = syntaxContext.Attributes.FirstOrDefault() ?? throw new ArgumentException("No EnableSourcyAttribute found");
-                        
-                        var typedConstant = attributeData.ConstructorArguments.FirstOrDefault();
-
-                        if (typedConstant.IsNull)
-                        {
-                            throw new ArgumentException("No constructor argument found for EnableSourcyAttribute");
-                        }
-                        
-                        return (string)typedConstant.Value!;
-                    });
+        var rootDirectoryValuesProvider = context.CompilationProvider.Select((compilation, _) =>
+                GetLocation(compilation))
+            .Select((directory, _) => GetRootDirectory(directory.FullName));
         
-        context.RegisterSourceOutput(incrementalValuesProvider, (productionContext, path) => Initialize(productionContext, GetRootDirectory(path)));
+        context.RegisterSourceOutput(rootDirectoryValuesProvider, Initialize);
     }
 
     protected abstract void Initialize(SourceProductionContext context, Root root);
@@ -75,6 +59,17 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     protected static DirectoryInfo GetLocation(string path)
     {
         return new FileInfo(path).Directory!;
+    }
+    
+    protected static DirectoryInfo GetLocation(Compilation compilation)
+    {
+        var assemblyLocations = compilation.Assembly.Locations;
+
+        var fileLocation = assemblyLocations
+                               .FirstOrDefault(x => x.Kind is LocationKind.MetadataFile)
+                           ?? assemblyLocations.First();
+
+        return Directory.GetParent(fileLocation.GetLineSpan().Path)!;
     }
 
     protected static SourceText GetSourceText([StringSyntax("c#")] string code)
