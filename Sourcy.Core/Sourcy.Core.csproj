@@ -9,7 +9,7 @@
     <ItemGroup>
         <Content Include="$(MSBuildThisFileDirectory)\Sourcy.Core.props">
             <Pack>true</Pack>
-            <PackagePath>buildTransitive/$(TargetFramework)/</PackagePath>
+            <PackagePath>buildTransitive/</PackagePath>
         </Content>
     </ItemGroup>
 
