@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -17,17 +16,21 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var rootDirectoryValuesProvider = context.CompilationProvider
-            .Select((compilation, _) => GetLocation(compilation))
-            .Select((directory, _) => GetRootDirectory(directory));
+            .Select((compilation, _) => GetRoot(compilation));
 
         context.RegisterSourceOutput(rootDirectoryValuesProvider, Initialize);
     }
 
     protected abstract void Initialize(SourceProductionContext context, Root root);
 
-    protected static Root GetRootDirectory(string path)
+    protected static Root? GetRootDirectory(string? path)
     {
-        DirectoryInfo? location = GetLocation(path);
+        if (path is null)
+        {
+            return null;
+        }
+        
+        var location = GetLocation(path);
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         while (location is not null)
@@ -47,7 +50,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 
         if (location is null)
         {
-            throw new ArgumentNullException(nameof(location));
+            return null;
         }
 
         return new Root(location);
@@ -58,13 +61,19 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         return new FileInfo(path).Directory!;
     }
 
-    protected static string GetLocation(Compilation compilation)
+    protected static Root GetRoot(Compilation compilation)
     {
         var assemblyLocations = compilation.Assembly.Locations;
 
-        var fileLocation = GetFileLocation(assemblyLocations);
-
-        return Directory.GetParent(fileLocation.GetLineSpan().Path)!.FullName!;
+        return assemblyLocations
+                   .Where(x => x.Kind == LocationKind.MetadataFile)
+                   .Select(x => GetRootDirectory(Directory.GetParent(x.GetLineSpan().Path)!.FullName))
+                   .OfType<Root>()
+                   .FirstOrDefault()
+               ?? assemblyLocations
+                   .Select(x => GetRootDirectory(Directory.GetParent(x.GetLineSpan().Path)!.FullName))
+                   .OfType<Root>()
+                   .First();
     }
 
     private static Location GetFileLocation(ImmutableArray<Location> assemblyLocations)
