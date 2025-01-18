@@ -1,7 +1,0 @@
-<Project>
-    <ItemGroup>
-        <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
-            <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
-        </AssemblyAttribute>
-    </ItemGroup>
-</Project>

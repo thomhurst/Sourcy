@@ -14,9 +14,7 @@
     <ProjectReference Include="..\Sourcy.DotNet\Sourcy.DotNet.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Sourcy\Sourcy.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
-  <ItemGroup>
-    <AssemblyAttribute Include="Sourcy.EnableSourcyAttribute">
-      <_Parameter1>$(MSBuildProjectFullPath)</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+  <PropertyGroup>
+    <SourcyDirectory>$(MSBuildProjectFullPath)</SourcyDirectory>
+  </PropertyGroup>
 </Project>
