@@ -9,6 +9,8 @@ This can avoid having to deal with relative paths, or defining absolute paths wh
 ## Getting Started
 After installing the Sourcy package(s) you want, properties can be found within the `Sourcy` namespace. So just start typing `Sourcy.` and your IDE should help you with the rest.
 
+Sourcy searches from the root of your repository or project. It'll traverse upwards until it finds a folder either containing a `.git` folder, or a `.sourcyroot` file. That file doesn't need to have any contents, just simply exist. If it can't find these, it will not run.
+
 Currently Sourcy has 4 packages:
 
 ## Sourcy.Git
