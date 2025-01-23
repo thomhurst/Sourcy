@@ -1,5 +1,6 @@
 #pragma warning disable RS1035
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,6 +18,19 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
     public IEnumerable<DirectoryInfo> EnumerateDirectories()
     {
         return SafeWalk.EnumerateDirectories(Directory);
+    }
+
+    public string MakeRelativePath(string filePath)
+    {
+        var fileUri = new Uri(filePath);
+        var rootUri = new Uri(Directory.FullName.EndsWith(Path.DirectorySeparatorChar.ToString())
+            ? Directory.FullName
+            : Directory.FullName + Path.DirectorySeparatorChar);
+
+        var relativeUri = rootUri.MakeRelativeUri(fileUri);
+        var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+        return relativePath.Replace('/', Path.DirectorySeparatorChar);
     }
 
     public bool Equals(Root? x, Root? y)

@@ -8,34 +8,27 @@ namespace Sourcy.DotNet;
 
 [Generator]
 internal class DotNetSourceGenerator : BaseSourcyGenerator
-{
-    private readonly List<FileInfo> _writtenProjects = [];
-    private readonly List<FileInfo> _writtenSolutions = [];
-    
+{    
     protected override void Initialize(SourceProductionContext context, Root root)
     {
         foreach (var file in root.EnumerateFiles())
         {
             if (file.Extension is ".csproj" or ".fsproj")
             {
-                WriteProject(context, file);
+                WriteProject(context, root, file);
             }
             
             if (file.Extension is ".sln" or ".slnx" or ".slnf")
             {
-                WriteSolution(context, file);
+                WriteSolution(context, root, file);
             }
         }
     }
 
-    private void WriteProject(SourceProductionContext context, FileInfo project)
+    private void WriteProject(SourceProductionContext context, Root root, FileInfo project)
     {
-        var formattedName = _writtenProjects.Any(x => x.Name == project.Name) 
-            ? project.FullName.Replace('.', '_').Replace(':', '_').Replace('\\', '_').Replace('/', '_')
-            : Path.GetFileNameWithoutExtension(project.FullName).Replace('.', '_');
+        var formattedName = root.MakeRelativePath(project.FullName).Replace('.', '_').Replace(Path.PathSeparator, '_');
         
-        _writtenProjects.Add(project);
-
         context.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
               namespace Sourcy.DotNet;
@@ -48,13 +41,9 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         ));
     }
     
-    private void WriteSolution(SourceProductionContext context, FileInfo solution)
+    private void WriteSolution(SourceProductionContext context, Root root, FileInfo solution)
     {
-        var formattedName = _writtenSolutions.Any(x => x.Name == solution.Name) 
-            ? solution.FullName.Replace('.', '_').Replace(':', '_').Replace('\\', '_').Replace('/', '_') 
-            : Path.GetFileNameWithoutExtension(solution.FullName).Replace('.', '_');
-        
-        _writtenSolutions.Add(solution);
+        var formattedName = root.MakeRelativePath(solution.FullName).Replace('.', '_').Replace(Path.PathSeparator, '_');
         
         context.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
@@ -66,5 +55,10 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
               }
               """
         ));
+    }
+
+    private static string MakeRelative(FileInfo solution)
+    {
+        return solution.FullName;
     }
 }
