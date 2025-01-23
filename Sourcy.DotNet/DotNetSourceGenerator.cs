@@ -27,7 +27,19 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
 
     private void WriteProject(SourceProductionContext context, Root root, FileInfo project)
     {
-        var formattedName = root.MakeRelativePath(project.FullName).Replace('.', '_').Replace(Path.PathSeparator, '_');
+        FileSystemInfo fileSystemInfo = project;
+        
+        if (project.Name.Replace(project.Extension, string.Empty) == project.Directory!.Name)
+        {
+            fileSystemInfo = project.Directory;
+        }
+        
+        var formattedName = root.MakeRelativePath(fileSystemInfo.FullName)
+            .Replace(project.Extension, string.Empty)
+            .Replace('.', '_')
+            .Replace(@"\", "__")
+            .Replace("/", "__")
+            .Trim('_');
         
         context.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
@@ -43,7 +55,19 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
     
     private void WriteSolution(SourceProductionContext context, Root root, FileInfo solution)
     {
-        var formattedName = root.MakeRelativePath(solution.FullName).Replace('.', '_').Replace(Path.PathSeparator, '_');
+        FileSystemInfo fileSystemInfo = solution;
+        
+        if (solution.Name.Replace(solution.Extension, string.Empty) == solution.Directory!.Name)
+        {
+            fileSystemInfo = solution.Directory;
+        }
+        
+        var formattedName = root.MakeRelativePath(fileSystemInfo.FullName)
+            .Replace(solution.Extension, string.Empty)
+            .Replace('.', '_')
+            .Replace(@"\", "__")
+            .Replace("/", "__")
+            .Trim('_');
         
         context.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""

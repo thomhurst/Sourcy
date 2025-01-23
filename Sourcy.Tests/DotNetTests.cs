@@ -7,7 +7,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Sourcy_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy;
+        var root = DotNet.Projects.Sourcy;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.csproj");
     }
@@ -15,7 +15,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Pipeline_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy_Pipeline;
+        var root = DotNet.Projects.Sourcy_Pipeline;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.Pipeline.csproj");
     }
@@ -23,7 +23,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_DotNet_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy_DotNet;
+        var root = DotNet.Projects.Sourcy_DotNet;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.DotNet.csproj");
     }
@@ -31,7 +31,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Tests_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy_Tests;
+        var root = DotNet.Projects.Sourcy_Tests;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.Tests.csproj");
     }
@@ -39,7 +39,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Git_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy_Git;
+        var root = DotNet.Projects.Sourcy_Git;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.Git.csproj");
     }
@@ -48,7 +48,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Node_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy_Node;
+        var root = DotNet.Projects.Sourcy_Node;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.Node.csproj");
     }
@@ -56,7 +56,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Docker_Project()
     {
-        var root = Sourcy.DotNet.Projects.Sourcy_Docker;
+        var root = DotNet.Projects.Sourcy_Docker;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.Docker.csproj");
     }
@@ -64,7 +64,7 @@ public class DotNetTests
     [Test]
     public async Task Can_Retrieve_Solution()
     {
-        var root = Sourcy.DotNet.Solutions.Sourcy;
+        var root = DotNet.Solutions.Sourcy;
 
         await Assert.That(root.Name).IsEqualTo("Sourcy.sln");
     }

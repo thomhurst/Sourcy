@@ -11,7 +11,7 @@ public class RunUnitTestsModule : Module<CommandResult>
 {
     protected override async Task<CommandResult?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
     {
-        return await Run(context, Sourcy.DotNet.Projects.Sourcy_Tests, cancellationToken);
+        return await Run(context, DotNet.Projects.Sourcy_Tests, cancellationToken);
     }
 
     private static async Task<CommandResult> Run(IPipelineContext context, File unitTestProjectFile, CancellationToken cancellationToken)

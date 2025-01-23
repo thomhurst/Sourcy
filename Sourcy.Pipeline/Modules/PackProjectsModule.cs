@@ -21,12 +21,12 @@ public class PackProjectsModule : Module<CommandResult[]>
 
         IEnumerable<FileInfo> projects =
             [
-                Sourcy.DotNet.Projects.Sourcy,
-                Sourcy.DotNet.Projects.Sourcy_Core,
-                Sourcy.DotNet.Projects.Sourcy_DotNet,
-                Sourcy.DotNet.Projects.Sourcy_Git,
-                Sourcy.DotNet.Projects.Sourcy_Node,
-                Sourcy.DotNet.Projects.Sourcy_Docker,
+                Projects.Sourcy,
+                Projects.Sourcy_Core,
+                Projects.Sourcy_DotNet,
+                Projects.Sourcy_Git,
+                Projects.Sourcy_Node,
+                Projects.Sourcy_Docker,
             ];
 
         return await projects.SelectAsync(project =>
