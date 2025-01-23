@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Sourcy.DotNet;
@@ -7,6 +9,9 @@ namespace Sourcy.DotNet;
 [Generator]
 internal class DotNetSourceGenerator : BaseSourcyGenerator
 {
+    private readonly List<FileInfo> _writtenProjects = [];
+    private readonly List<FileInfo> _writtenSolutions = [];
+    
     protected override void Initialize(SourceProductionContext context, Root root)
     {
         foreach (var file in root.EnumerateFiles())
@@ -23,10 +28,14 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         }
     }
 
-    private static void WriteProject(SourceProductionContext context, FileInfo project)
+    private void WriteProject(SourceProductionContext context, FileInfo project)
     {
-        var formattedName = Path.GetFileNameWithoutExtension(project.FullName).Replace('.', '_');
+        var formattedName = _writtenProjects.Any(x => x.Name == project.Name) 
+            ? project.FullName.Replace('.', '_').Replace(':', '_') 
+            : Path.GetFileNameWithoutExtension(project.FullName).Replace('.', '_');
         
+        _writtenProjects.Add(project);
+
         context.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
               namespace Sourcy.DotNet;
@@ -39,9 +48,13 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         ));
     }
     
-    private static void WriteSolution(SourceProductionContext context, FileInfo solution)
+    private void WriteSolution(SourceProductionContext context, FileInfo solution)
     {
-        var formattedName = Path.GetFileNameWithoutExtension(solution.FullName).Replace('.', '_');
+        var formattedName = _writtenSolutions.Any(x => x.Name == solution.Name) 
+            ? solution.FullName.Replace('.', '_').Replace(':', '_') 
+            : Path.GetFileNameWithoutExtension(solution.FullName).Replace('.', '_');
+        
+        _writtenSolutions.Add(solution);
         
         context.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
             $$"""
