@@ -31,7 +31,7 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
     private void WriteProject(SourceProductionContext context, FileInfo project)
     {
         var formattedName = _writtenProjects.Any(x => x.Name == project.Name) 
-            ? project.FullName.Replace('.', '_').Replace(':', '_') 
+            ? project.FullName.Replace('.', '_').Replace(':', '_').Replace('\\', '_').Replace('/', '_')
             : Path.GetFileNameWithoutExtension(project.FullName).Replace('.', '_');
         
         _writtenProjects.Add(project);
@@ -51,7 +51,7 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
     private void WriteSolution(SourceProductionContext context, FileInfo solution)
     {
         var formattedName = _writtenSolutions.Any(x => x.Name == solution.Name) 
-            ? solution.FullName.Replace('.', '_').Replace(':', '_') 
+            ? solution.FullName.Replace('.', '_').Replace(':', '_').Replace('\\', '_').Replace('/', '_') 
             : Path.GetFileNameWithoutExtension(solution.FullName).Replace('.', '_');
         
         _writtenSolutions.Add(solution);
