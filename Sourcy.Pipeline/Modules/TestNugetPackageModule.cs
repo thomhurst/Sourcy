@@ -20,7 +20,7 @@ public class TestNugetPackageModule : Module<CommandResult[]>
     {
         var version = await GetModule<NugetVersionGeneratorModule>();
 
-        var project = DotNet.Projects.Utils__Sourcy_NuGet_Tests;
+        var project = DotNet.Projects.Sourcy_NuGet_Tests;
 
         return await _frameworks.SelectAsync(framework =>
                 SubModule(framework, () =>

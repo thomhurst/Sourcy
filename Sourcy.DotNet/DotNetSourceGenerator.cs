@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
+using Sourcy.Extensions;
 
 namespace Sourcy.DotNet;
 
@@ -11,78 +13,63 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
 {    
     protected override void Initialize(SourceProductionContext context, Root root)
     {
+        var projects = new List<FileInfo>();
+        var solutions = new List<FileInfo>();
+        
         foreach (var file in root.EnumerateFiles())
         {
             if (file.Extension is ".csproj" or ".fsproj")
             {
-                WriteProject(context, root, file);
+                projects.Add(file);
             }
             
             if (file.Extension is ".sln" or ".slnx" or ".slnf")
             {
-                WriteSolution(context, root, file);
+                solutions.Add(file);
             }
         }
+        
+        WriteProjects(context, Distinct(root, projects));
+
+        WriteSolutions(context, Distinct(root, solutions));
     }
 
-    private void WriteProject(SourceProductionContext context, Root root, FileInfo project)
+    private void WriteProjects(SourceProductionContext context, IEnumerable<SourceGeneratedPath> projects)
     {
-        FileSystemInfo fileSystemInfo = project;
+        var sourceBuilder = new StringBuilder();
         
-        if (project.Name.Replace(project.Extension, string.Empty) == project.Directory!.Name)
+        sourceBuilder.AppendLine("namespace Sourcy.DotNet;");
+        sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("internal static class Projects");
+        sourceBuilder.AppendLine("{");
+        
+        foreach (var project in projects)
         {
-            fileSystemInfo = project.Directory;
+            sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {project.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{project.File.FullName}\");");
         }
         
-        var formattedName = root.MakeRelativePath(fileSystemInfo.FullName)
-            .Replace(project.Extension, string.Empty)
-            .Replace('.', '_')
-            .Replace(@"\", "__")
-            .Replace("/", "__")
-            .Trim('_');
+        sourceBuilder.AppendLine("}");
         
-        context.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
-            $$"""
-              namespace Sourcy.DotNet;
-
-              internal static partial class Projects
-              {
-                  public static global::System.IO.FileInfo {{formattedName}} { get; } = new global::System.IO.FileInfo(@"{{project.FullName}}");
-              }
-              """
-        ));
+        context.AddSource($"DotNetProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(sourceBuilder.ToString()));
     }
-    
-    private void WriteSolution(SourceProductionContext context, Root root, FileInfo solution)
+
+    private void WriteSolutions(SourceProductionContext context, IEnumerable<SourceGeneratedPath> solutions)
     {
-        FileSystemInfo fileSystemInfo = solution;
+        var sourceBuilder = new StringBuilder();
         
-        if (solution.Name.Replace(solution.Extension, string.Empty) == solution.Directory!.Name)
+        sourceBuilder.AppendLine("namespace Sourcy.DotNet;");
+        sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("internal static class Solutions");
+        sourceBuilder.AppendLine("{");
+        
+        foreach (var solution in solutions)
         {
-            fileSystemInfo = solution.Directory;
+            sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {solution.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{solution.File.FullName}\");");
         }
         
-        var formattedName = root.MakeRelativePath(fileSystemInfo.FullName)
-            .Replace(solution.Extension, string.Empty)
-            .Replace('.', '_')
-            .Replace(@"\", "__")
-            .Replace("/", "__")
-            .Trim('_');
+        sourceBuilder.AppendLine("}");
         
-        context.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
-            $$"""
-              namespace Sourcy.DotNet;
-
-              internal static partial class Solutions
-              {
-                  public static global::System.IO.FileInfo {{formattedName}} { get; } = new global::System.IO.FileInfo(@"{{solution.FullName}}");
-              }
-              """
-        ));
-    }
-
-    private static string MakeRelative(FileInfo solution)
-    {
-        return solution.FullName;
+        context.AddSource($"DotNetSolutionExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(sourceBuilder.ToString()));
     }
 }
+

@@ -1,5 +1,7 @@
 #pragma warning disable RS1035
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -7,6 +9,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Sourcy.Extensions;
 
 namespace Sourcy;
 
@@ -84,5 +87,45 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     protected static SourceText GetSourceText([StringSyntax("c#")] string code)
     {
         return SourceText.From(code, Encoding.UTF8);
+    }
+    
+    protected IEnumerable<SourceGeneratedPath> Distinct(Root root, List<FileInfo> files)
+    {
+        foreach (var group in files.GroupBy(x => x.NameWithoutExtension()))
+        {
+            if (group.Count() > 1)
+            {
+                foreach (var file in group)
+                {
+                    FileSystemInfo fileSystemInfo = file;
+        
+                    if (file.NameWithoutExtension() == file.Directory!.Name)
+                    {
+                        fileSystemInfo = file.Directory;
+                    }
+        
+                    var formattedName = root.MakeRelativePath(fileSystemInfo.FullName)
+                        .Replace(file.Extension, string.Empty)
+                        .Replace('.', '_')
+                        .Replace(@"\", "__")
+                        .Replace("/", "__")
+                        .Trim('_');
+
+                    yield return new SourceGeneratedPath
+                    {
+                        File = file,
+                        Name = formattedName
+                    };
+                }
+            }
+            else
+            {
+                yield return new SourceGeneratedPath
+                {
+                    File = group.First(),
+                    Name = group.Key.Replace('.', '_')
+                };
+            }
+        }
     }
 }
