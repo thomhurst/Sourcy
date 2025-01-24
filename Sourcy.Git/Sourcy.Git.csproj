@@ -19,6 +19,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; compile; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Polly" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
   <PropertyGroup>
     <GetTargetPathDependsOn>
@@ -29,6 +30,8 @@
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(PKGCliWrap)\lib\netstandard2.0\CliWrap.dll" IncludeRuntimeDependency="false" />
       <None Include="$(PKGCliWrap)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGPolly)\lib\netstandard2.0\Polly.dll" IncludeRuntimeDependency="false" />
+      <None Include="$(PKGPolly)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
       <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll" IncludeRuntimeDependency="false" />
       <None Include="$(PKGMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>

@@ -1,7 +1,9 @@
+using System;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Buffered;
 using Microsoft.CodeAnalysis;
+using Polly;
 
 namespace Sourcy.Git;
 
@@ -23,11 +25,13 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
     private static async Task RootDirectory(SourceProductionContext context, string? location)
     {
-        var root = await Cli.Wrap("git")
-            .WithArguments(["rev-parse", "--show-toplevel"])
-            .WithValidation(CommandResultValidation.None)
-            .WithWorkingDirectory(location!)
-            .ExecuteBufferedAsync();
+        var root = await Policy.Handle<Exception>()
+            .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
+            .ExecuteAsync(async () => await Cli.Wrap("git")
+                .WithArguments(["rev-parse", "--show-toplevel"])
+                .WithValidation(CommandResultValidation.None)
+                .WithWorkingDirectory(location!)
+                .ExecuteBufferedAsync());
 
         if (root.IsSuccess && !string.IsNullOrWhiteSpace(root.StandardOutput))
         {
