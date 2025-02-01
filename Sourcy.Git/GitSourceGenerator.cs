@@ -29,23 +29,19 @@ internal class GitSourceGenerator : BaseSourcyGenerator
             .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
             .ExecuteAsync(async () => await Cli.Wrap("git")
                 .WithArguments(["rev-parse", "--show-toplevel"])
-                .WithValidation(CommandResultValidation.None)
                 .WithWorkingDirectory(location!)
                 .ExecuteBufferedAsync());
 
-        if (root.IsSuccess && !string.IsNullOrWhiteSpace(root.StandardOutput))
-        {
-            context.AddSource("GitRootExtensions.g.cs", GetSourceText(
-                $$"""
-                  namespace Sourcy;
+        context.AddSource("GitRootExtensions.g.cs", GetSourceText(
+            $$"""
+              namespace Sourcy;
 
-                  internal static partial class Git
-                  {
-                      public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo("{{root.StandardOutput.Trim()}}");
-                  }
-                  """
-            ));
-        }
+              internal static partial class Git
+              {
+                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo("{{root.StandardOutput.Trim()}}");
+              }
+              """
+        ));
     }
     
     private static async Task BranchName(SourceProductionContext context, string? location)
