@@ -26,6 +26,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
     private static async Task RootDirectory(SourceProductionContext context, string? location)
     {
         var root = await Policy.Handle<Exception>()
+            .OrResult<BufferedCommandResult>(x => string.IsNullOrWhiteSpace(x.StandardOutput))
             .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
             .ExecuteAsync(async () => await Cli.Wrap("git")
                 .WithArguments(["rev-parse", "--show-toplevel"])
@@ -46,13 +47,15 @@ internal class GitSourceGenerator : BaseSourcyGenerator
     
     private static async Task BranchName(SourceProductionContext context, string? location)
     {
-        var root = await Cli.Wrap("git")
-            .WithArguments(["rev-parse", "--abbrev-ref", "HEAD"])
-            .WithValidation(CommandResultValidation.None)
-            .WithWorkingDirectory(location!)
-            .ExecuteBufferedAsync();
+        var branch = await Policy.Handle<Exception>()
+            .OrResult<BufferedCommandResult>(x => string.IsNullOrWhiteSpace(x.StandardOutput))
+            .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
+            .ExecuteAsync(async () => await Cli.Wrap("git")
+                .WithArguments(["rev-parse", "--abbrev-ref", "HEAD"])
+                .WithWorkingDirectory(location!)
+                .ExecuteBufferedAsync());
 
-        if (root.IsSuccess && !string.IsNullOrWhiteSpace(root.StandardOutput))
+        if (!string.IsNullOrWhiteSpace(branch.StandardOutput))
         {
             context.AddSource("GitBranchNameExtensions.g.cs", GetSourceText(
                 $$"""
@@ -60,7 +63,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
                   internal static partial class Git
                   {
-                      public static string BranchName { get; } = "{{root.StandardOutput.Trim()}}";
+                      public static string BranchName { get; } = "{{branch.StandardOutput.Trim()}}";
                   }
                   """
             ));
