@@ -17,7 +17,7 @@ Currently Sourcy has 4 packages:
 Attempts to find your Git directory by parsing the result of `git rev-parse --show-toplevel`
 
 ## Sourcy.DotNet
-Searches for Projects with a `.csproj` or `.fsproj` extension
+Searches for Projects with a `.csproj`, `.fsproj` or `.vbproj` extension
 
 Searches for Solutions with a `.sln`, `.slnx` or `.slnf` extension
 
