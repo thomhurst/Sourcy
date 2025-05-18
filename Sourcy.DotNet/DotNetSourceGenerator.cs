@@ -18,7 +18,7 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         
         foreach (var file in root.EnumerateFiles())
         {
-            if (file.Extension is ".csproj" or ".fsproj")
+            if (file.Extension is ".csproj" or ".fsproj" or ".vbproj")
             {
                 projects.Add(file);
             }
