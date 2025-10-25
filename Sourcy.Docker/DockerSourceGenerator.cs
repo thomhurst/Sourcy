@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace Sourcy.Docker;
@@ -10,26 +12,48 @@ internal class DockerSourceGenerator : BaseSourcyGenerator
 {
     protected override void Initialize(SourceProductionContext context, Root root)
     {
-        foreach (var project in root.EnumerateFiles()
-                     .Where(x => x.Name is "Dockerfile"))
+        try
         {
-            WriteDockerfile(context, project);
+            var dockerfiles = root.EnumerateFiles()
+                .Where(x => x.Name is "Dockerfile")
+                .ToList();
+
+            WriteDockerfiles(context, dockerfiles);
+        }
+        catch (Exception ex)
+        {
+            context.ReportGenerationError("Docker generator", ex);
         }
     }
 
-    private static void WriteDockerfile(SourceProductionContext context, FileInfo project)
+    private static void WriteDockerfiles(SourceProductionContext context, List<FileInfo> dockerfiles)
     {
-        var formattedName = project.Directory!.Name.Replace('.', '_');
-        
-        context.AddSource($"DockerFileExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
-            $$"""
-              namespace Sourcy.Docker;
+        var sourceBuilder = new StringBuilder();
+        var usedIdentifiers = new HashSet<string>();
 
-              internal static partial class Dockerfiles
-              {
-                  public static global::System.IO.FileInfo {{formattedName}} { get; } = new global::System.IO.FileInfo(@"{{project.FullName}}");
-              }
-              """
-        ));
+        sourceBuilder.AppendLine("namespace Sourcy.Docker;");
+        sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("internal static class Dockerfiles");
+        sourceBuilder.AppendLine("{");
+
+        foreach (var dockerfile in dockerfiles)
+        {
+            try
+            {
+                var formattedName = IdentifierHelper.ToValidIdentifier(
+                    dockerfile.Directory!.Name,
+                    usedIdentifiers);
+
+                sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {formattedName} {{ get; }} = new global::System.IO.FileInfo(@\"{dockerfile.FullName}\");");
+            }
+            catch (Exception ex)
+            {
+                context.ReportGenerationError(dockerfile.Name, ex);
+            }
+        }
+
+        sourceBuilder.AppendLine("}");
+
+        context.AddSource("DockerFileExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
     }
 }

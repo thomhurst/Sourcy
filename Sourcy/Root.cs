@@ -22,15 +22,47 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
 
     public string MakeRelativePath(string filePath)
     {
-        var fileUri = new Uri(filePath);
-        var rootUri = new Uri(Directory.FullName.EndsWith(Path.DirectorySeparatorChar.ToString())
-            ? Directory.FullName
-            : Directory.FullName + Path.DirectorySeparatorChar);
+        try
+        {
+            var fileUri = new Uri(filePath);
+            var rootUri = new Uri(Directory.FullName.EndsWith(Path.DirectorySeparatorChar.ToString())
+                ? Directory.FullName
+                : Directory.FullName + Path.DirectorySeparatorChar);
 
-        var relativeUri = rootUri.MakeRelativeUri(fileUri);
-        var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+            var relativeUri = rootUri.MakeRelativeUri(fileUri);
+            var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
 
-        return relativePath.Replace('/', Path.DirectorySeparatorChar);
+            return relativePath.Replace('/', Path.DirectorySeparatorChar);
+        }
+        catch (UriFormatException)
+        {
+            // Fallback to string manipulation if Uri parsing fails
+            return MakeRelativePathFallback(filePath);
+        }
+        catch (InvalidOperationException)
+        {
+            // MakeRelativeUri can throw if URIs can't be compared
+            return MakeRelativePathFallback(filePath);
+        }
+    }
+
+    private string MakeRelativePathFallback(string filePath)
+    {
+        // Simple string-based relative path calculation
+        var rootPath = Directory.FullName;
+
+        if (!rootPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+        {
+            rootPath += Path.DirectorySeparatorChar;
+        }
+
+        if (filePath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return filePath.Substring(rootPath.Length);
+        }
+
+        // If path is not under root, return the file name
+        return Path.GetFileName(filePath);
     }
 
     public bool Equals(Root? x, Root? y)

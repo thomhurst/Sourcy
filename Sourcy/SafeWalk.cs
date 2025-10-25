@@ -11,24 +11,101 @@ internal static class SafeWalk
 {
     public static IEnumerable<FileInfo> EnumerateFiles(DirectoryInfo directory)
     {
-        return EnumerateDirectories(directory)
-            .SelectMany(x => x.EnumerateFiles("*", SearchOption.TopDirectoryOnly));
+        foreach (var dir in EnumerateDirectories(directory))
+        {
+            FileInfo[]? files = null;
+
+            try
+            {
+                files = dir.GetFiles("*", SearchOption.TopDirectoryOnly);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Skip directories we don't have permission to read
+                continue;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                // Directory was deleted after we found it
+                continue;
+            }
+            catch (PathTooLongException)
+            {
+                // Path exceeds system limits
+                continue;
+            }
+            catch (IOException)
+            {
+                // I/O error (file locked, network issue, etc.)
+                continue;
+            }
+            catch (System.Security.SecurityException)
+            {
+                // Security policy prevents access
+                continue;
+            }
+
+            if (files != null)
+            {
+                foreach (var file in files)
+                {
+                    yield return file;
+                }
+            }
+        }
     }
 
     private static readonly string[] ExcludedDirectories = [ "node_modules", ".git"];
-    
+
     public static IEnumerable<DirectoryInfo> EnumerateDirectories(DirectoryInfo directory)
     {
         if (!ShouldSearchDirectory(directory))
         {
             yield break;
         }
-        
+
         yield return directory;
 
         var innerFolders = new List<DirectoryInfo>();
-        
-        foreach (var folder in directory.EnumerateDirectories("*", SearchOption.TopDirectoryOnly))
+
+        DirectoryInfo[]? subDirectories = null;
+
+        try
+        {
+            subDirectories = directory.GetDirectories("*", SearchOption.TopDirectoryOnly);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Can't access this directory's subdirectories
+            yield break;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            // Directory was deleted after we found it
+            yield break;
+        }
+        catch (PathTooLongException)
+        {
+            // Path exceeds system limits
+            yield break;
+        }
+        catch (IOException)
+        {
+            // I/O error (network issue, disk error, etc.)
+            yield break;
+        }
+        catch (System.Security.SecurityException)
+        {
+            // Security policy prevents access
+            yield break;
+        }
+
+        if (subDirectories == null)
+        {
+            yield break;
+        }
+
+        foreach (var folder in subDirectories)
         {
             try
             {
@@ -39,6 +116,18 @@ internal static class SafeWalk
                 continue;
             }
             catch (DirectoryNotFoundException)
+            {
+                continue;
+            }
+            catch (PathTooLongException)
+            {
+                continue;
+            }
+            catch (IOException)
+            {
+                continue;
+            }
+            catch (System.Security.SecurityException)
             {
                 continue;
             }

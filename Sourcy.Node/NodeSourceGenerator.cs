@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace Sourcy.Node;
@@ -10,20 +12,28 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
 {
     protected override void Initialize(SourceProductionContext context, Root root)
     {
-        foreach (var packageJson in root.EnumerateFiles()
-                     .Where(x => x.Name is "package-lock.json")
-                     .Where(x => !IsInNodeModules(x))
-                     .Distinct())
+        try
         {
-            WriteNpmProject(context, packageJson.Directory!);
+            var npmProjects = root.EnumerateFiles()
+                .Where(x => x.Name is "package-lock.json")
+                .Where(x => !IsInNodeModules(x))
+                .Select(x => x.Directory!)
+                .Distinct()
+                .ToList();
+
+            var yarnProjects = root.EnumerateFiles()
+                .Where(x => x.Name is "yarn.lock")
+                .Where(x => !IsInNodeModules(x))
+                .Select(x => x.Directory!)
+                .Distinct()
+                .ToList();
+
+            WriteNpmProjects(context, npmProjects);
+            WriteYarnProjects(context, yarnProjects);
         }
-        
-        foreach (var yarnLock in root.EnumerateFiles()
-                     .Where(x => x.Name is "yarn.lock")
-                     .Where(x => !IsInNodeModules(x))
-                     .Distinct())
+        catch (Exception ex)
         {
-            WriteYarnProject(context, yarnLock.Directory!);
+            context.ReportGenerationError("Node generator", ex);
         }
     }
 
@@ -44,35 +54,65 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
         return false;
     }
 
-    private static void WriteNpmProject(SourceProductionContext context, DirectoryInfo projectDirectory)
+    private static void WriteNpmProjects(SourceProductionContext context, List<DirectoryInfo> projects)
     {
-        var formattedName = projectDirectory.Name.Replace('.', '_');
-        
-        context.AddSource($"NpmProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
-            $$"""
-              namespace Sourcy.Node.Npm;
+        var sourceBuilder = new StringBuilder();
+        var usedIdentifiers = new HashSet<string>();
 
-              internal static partial class Projects
-              {
-                  public static global::System.IO.DirectoryInfo {{formattedName}} { get; } = new global::System.IO.DirectoryInfo(@"{{projectDirectory.FullName}}");
-              }
-              """
-        ));
+        sourceBuilder.AppendLine("namespace Sourcy.Node.Npm;");
+        sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("internal static class Projects");
+        sourceBuilder.AppendLine("{");
+
+        foreach (var projectDirectory in projects)
+        {
+            try
+            {
+                var formattedName = IdentifierHelper.ToValidIdentifier(
+                    projectDirectory.Name,
+                    usedIdentifiers);
+
+                sourceBuilder.AppendLine($"\tpublic static global::System.IO.DirectoryInfo {formattedName} {{ get; }} = new global::System.IO.DirectoryInfo(@\"{projectDirectory.FullName}\");");
+            }
+            catch (Exception ex)
+            {
+                context.ReportGenerationError(projectDirectory.Name, ex);
+            }
+        }
+
+        sourceBuilder.AppendLine("}");
+
+        context.AddSource("NpmProjectExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
     }
-    
-    private static void WriteYarnProject(SourceProductionContext context, DirectoryInfo projectDirectory)
-    {
-        var formattedName = projectDirectory.Name.Replace('.', '_');
-        
-        context.AddSource($"YarnProjectExtensions{Guid.NewGuid():N}.g.cs", GetSourceText(
-            $$"""
-              namespace Sourcy.Node.Yarn;
 
-              internal static partial class Projects
-              {
-                  public static global::System.IO.DirectoryInfo {{formattedName}} { get; } = new global::System.IO.DirectoryInfo(@"{{projectDirectory.FullName}}");
-              }
-              """
-        ));
+    private static void WriteYarnProjects(SourceProductionContext context, List<DirectoryInfo> projects)
+    {
+        var sourceBuilder = new StringBuilder();
+        var usedIdentifiers = new HashSet<string>();
+
+        sourceBuilder.AppendLine("namespace Sourcy.Node.Yarn;");
+        sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("internal static class Projects");
+        sourceBuilder.AppendLine("{");
+
+        foreach (var projectDirectory in projects)
+        {
+            try
+            {
+                var formattedName = IdentifierHelper.ToValidIdentifier(
+                    projectDirectory.Name,
+                    usedIdentifiers);
+
+                sourceBuilder.AppendLine($"\tpublic static global::System.IO.DirectoryInfo {formattedName} {{ get; }} = new global::System.IO.DirectoryInfo(@\"{projectDirectory.FullName}\");");
+            }
+            catch (Exception ex)
+            {
+                context.ReportGenerationError(projectDirectory.Name, ex);
+            }
+        }
+
+        sourceBuilder.AppendLine("}");
+
+        context.AddSource("YarnProjectExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
     }
 }
