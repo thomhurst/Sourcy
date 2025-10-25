@@ -69,19 +69,49 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         return new Root(location);
     }
 
-    protected static Root GetRoot(Compilation compilation)
+    protected static Root? GetRoot(Compilation compilation)
     {
         var assemblyLocations = compilation.Assembly.Locations;
 
-        return assemblyLocations
-                   .Where(x => x.Kind == LocationKind.MetadataFile)
-                   .Select(x => GetRootDirectory(Directory.GetParent(x.GetLineSpan().Path)!.FullName))
-                   .OfType<Root>()
-                   .FirstOrDefault()
-               ?? assemblyLocations
-                   .Select(x => GetRootDirectory(Directory.GetParent(x.GetLineSpan().Path)!.FullName))
-                   .OfType<Root>()
-                   .First();
+        // Try metadata files first
+        var metadataRoot = assemblyLocations
+            .Where(x => x.Kind == LocationKind.MetadataFile)
+            .Select(x =>
+            {
+                var path = x.GetLineSpan().Path;
+                if (string.IsNullOrEmpty(path))
+                {
+                    return null;
+                }
+
+                var parent = Directory.GetParent(path);
+                return parent != null ? GetRootDirectory(parent.FullName) : null;
+            })
+            .OfType<Root>()
+            .FirstOrDefault();
+
+        if (metadataRoot != null)
+        {
+            return metadataRoot;
+        }
+
+        // Try all locations
+        var anyRoot = assemblyLocations
+            .Select(x =>
+            {
+                var path = x.GetLineSpan().Path;
+                if (string.IsNullOrEmpty(path))
+                {
+                    return null;
+                }
+
+                var parent = Directory.GetParent(path);
+                return parent != null ? GetRootDirectory(parent.FullName) : null;
+            })
+            .OfType<Root>()
+            .FirstOrDefault();
+
+        return anyRoot;
     }
 
     protected static SourceText GetSourceText([StringSyntax("c#")] string code)
@@ -91,25 +121,27 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     
     protected IEnumerable<SourceGeneratedPath> Distinct(Root root, List<FileInfo> files)
     {
+        var usedIdentifiers = new HashSet<string>();
+
         foreach (var group in files.GroupBy(x => x.NameWithoutExtension()))
         {
             if (group.Count() > 1)
             {
+                // Multiple files with same name - use path-based naming
                 foreach (var file in group)
                 {
                     FileSystemInfo fileSystemInfo = file;
-        
+
                     if (file.NameWithoutExtension() == file.Directory!.Name)
                     {
                         fileSystemInfo = file.Directory;
                     }
-        
-                    var formattedName = root.MakeRelativePath(fileSystemInfo.FullName)
-                        .Replace(file.Extension, string.Empty)
-                        .Replace('.', '_')
-                        .Replace(@"\", "__")
-                        .Replace("/", "__")
-                        .Trim('_');
+
+                    var relativePath = root.MakeRelativePath(fileSystemInfo.FullName);
+                    var formattedName = IdentifierHelper.SanitizePathToIdentifier(relativePath, file.Extension);
+
+                    // Ensure uniqueness
+                    formattedName = IdentifierHelper.ToValidIdentifier(formattedName, usedIdentifiers);
 
                     yield return new SourceGeneratedPath
                     {
@@ -120,10 +152,14 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             }
             else
             {
+                // Single file with this name - use simple name
+                var file = group.First();
+                var simpleName = IdentifierHelper.ToValidIdentifier(group.Key, usedIdentifiers);
+
                 yield return new SourceGeneratedPath
                 {
-                    File = group.First(),
-                    Name = group.Key.Replace('.', '_')
+                    File = file,
+                    Name = simpleName
                 };
             }
         }
