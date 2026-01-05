@@ -127,6 +127,7 @@ internal static class IdentifierHelper
 
     /// <summary>
     /// Truncates a string to the specified length and appends a hash to maintain uniqueness.
+    /// Uses a stable hash algorithm that produces consistent results across runs and processes.
     /// </summary>
     private static string TruncateAndHash(string input, int maxLength)
     {
@@ -139,11 +140,36 @@ internal static class IdentifierHelper
         int truncateLength = maxLength - 9; // -9 for underscore + 8 hex digits
         string truncated = input.Substring(0, truncateLength);
 
-        // Generate a simple hash to maintain uniqueness
-        int hash = input.GetHashCode();
-        string hashString = Math.Abs(hash).ToString("X8");
+        // Generate a stable hash that is consistent across runs
+        // Using FNV-1a algorithm which is simple, fast, and deterministic
+        uint hash = GetStableHash(input);
+        string hashString = hash.ToString("X8");
 
         return $"{truncated}_{hashString}";
+    }
+
+    /// <summary>
+    /// Computes a stable hash using FNV-1a algorithm.
+    /// Unlike GetHashCode(), this produces the same result across different runs and processes.
+    /// Note: This hashes UTF-16 char values directly, so different Unicode normalizations
+    /// of the same logical string may produce different hashes. This is acceptable for
+    /// file path identifiers which are typically ASCII or consistently encoded by the OS.
+    /// </summary>
+    private static uint GetStableHash(string input)
+    {
+        // FNV-1a constants for 32-bit
+        const uint fnvPrime = 16777619;
+        const uint fnvOffsetBasis = 2166136261;
+
+        uint hash = fnvOffsetBasis;
+
+        foreach (char c in input)
+        {
+            hash ^= c;
+            hash *= fnvPrime;
+        }
+
+        return hash;
     }
 
     /// <summary>

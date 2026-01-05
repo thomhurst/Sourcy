@@ -58,7 +58,8 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
 
         foreach (var project in projects)
         {
-            sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {project.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{project.File.FullName}\");");
+            var escapedPath = PathEscaper.EscapeForVerbatimString(project.File.FullName);
+            sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {project.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{escapedPath}\");");
         }
 
         sourceBuilder.AppendLine("}");
@@ -77,7 +78,8 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
 
         foreach (var solution in solutions)
         {
-            sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {solution.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{solution.File.FullName}\");");
+            var escapedPath = PathEscaper.EscapeForVerbatimString(solution.File.FullName);
+            sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {solution.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{escapedPath}\");");
         }
 
         sourceBuilder.AppendLine("}");
