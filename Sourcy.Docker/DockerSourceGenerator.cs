@@ -44,7 +44,8 @@ internal class DockerSourceGenerator : BaseSourcyGenerator
                     dockerfile.Directory!.Name,
                     usedIdentifiers);
 
-                sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {formattedName} {{ get; }} = new global::System.IO.FileInfo(@\"{dockerfile.FullName}\");");
+                var escapedPath = PathEscaper.EscapeForVerbatimString(dockerfile.FullName);
+                sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {formattedName} {{ get; }} = new global::System.IO.FileInfo(@\"{escapedPath}\");");
             }
             catch (Exception ex)
             {

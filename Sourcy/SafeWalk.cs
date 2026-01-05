@@ -4,11 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Sourcy;
 
 internal static class SafeWalk
 {
+    // Maximum depth to prevent runaway recursion
+    private const int MaxDepth = 50;
+
     public static IEnumerable<FileInfo> EnumerateFiles(DirectoryInfo directory)
     {
         foreach (var dir in EnumerateDirectories(directory))
@@ -55,18 +59,67 @@ internal static class SafeWalk
         }
     }
 
-    private static readonly string[] ExcludedDirectories = [ "node_modules", ".git"];
+    // Extended list of directories to exclude for better cross-platform support
+    private static readonly string[] ExcludedDirectories =
+    [
+        // Version control
+        "node_modules", ".git", ".hg", ".svn", ".bzr",
+        // Build outputs
+        "bin", "obj", "packages", "TestResults",
+        // IDE/Editor
+        ".vs", ".vscode", ".idea",
+        // Package managers
+        ".npm", ".nuget", ".cargo", ".rustup",
+        // Virtual environments
+        ".venv", "venv", "__pycache__",
+        // Windows system
+        "$RECYCLE.BIN", "System Volume Information",
+        // macOS
+        ".Trash", ".Spotlight-V100", ".fseventsd"
+    ];
 
     public static IEnumerable<DirectoryInfo> EnumerateDirectories(DirectoryInfo directory)
     {
+        // Use a visited set to detect symlink cycles with platform-appropriate case sensitivity
+        var visited = new HashSet<string>(PathUtilities.PathComparer);
+        return EnumerateDirectoriesInternal(directory, visited, 0);
+    }
+
+    private static IEnumerable<DirectoryInfo> EnumerateDirectoriesInternal(
+        DirectoryInfo directory,
+        HashSet<string> visited,
+        int depth)
+    {
+        // Prevent infinite recursion from deep directories
+        if (depth > MaxDepth)
+        {
+            yield break;
+        }
+
         if (!ShouldSearchDirectory(directory))
         {
             yield break;
         }
 
-        yield return directory;
+        // Resolve symlinks to detect cycles - get the real path
+        string realPath;
+        try
+        {
+            realPath = GetRealPath(directory);
+        }
+        catch
+        {
+            // If we can't resolve the path, skip it
+            yield break;
+        }
 
-        var innerFolders = new List<DirectoryInfo>();
+        // Check for cycles (symlink pointing to parent directory)
+        if (!visited.Add(realPath))
+        {
+            yield break;
+        }
+
+        yield return directory;
 
         DirectoryInfo[]? subDirectories = null;
 
@@ -107,9 +160,21 @@ internal static class SafeWalk
 
         foreach (var folder in subDirectories)
         {
+            IEnumerable<DirectoryInfo>? innerFolders = null;
+
             try
             {
-                innerFolders.AddRange(EnumerateDirectories(folder!));
+                // Check if this is a symlink/junction - skip if it would cause a cycle
+                if (IsSymbolicLinkOrJunction(folder))
+                {
+                    var targetPath = GetRealPath(folder);
+                    if (visited.Contains(targetPath))
+                    {
+                        continue; // Skip symlink cycle
+                    }
+                }
+
+                innerFolders = EnumerateDirectoriesInternal(folder, visited, depth + 1);
             }
             catch (UnauthorizedAccessException)
             {
@@ -132,32 +197,97 @@ internal static class SafeWalk
                 continue;
             }
 
-            foreach (var innerFolder in innerFolders)
+            if (innerFolders != null)
             {
-                yield return innerFolder;
+                foreach (var innerFolder in innerFolders)
+                {
+                    yield return innerFolder;
+                }
             }
-
-            innerFolders.Clear();
         }
     }
 
     private static bool ShouldSearchDirectory(DirectoryInfo directory)
     {
-        if ((directory.Attributes & FileAttributes.Hidden) != 0)
+        try
         {
+            // Check if directory still exists
+            if (!directory.Exists)
+            {
+                return false;
+            }
+
+            var attributes = directory.Attributes;
+
+            // Skip hidden directories (but allow on Linux where .folders are common)
+            if ((attributes & FileAttributes.Hidden) != 0 && PathUtilities.IsCaseSensitive == false)
+            {
+                return false;
+            }
+
+            // Skip system directories
+            if ((attributes & FileAttributes.System) != 0)
+            {
+                return false;
+            }
+        }
+        catch
+        {
+            // If we can't read attributes, skip the directory
             return false;
         }
-        
+
         if (File.Exists(Path.Combine(directory.FullName, ".sourcyignore")))
         {
             return false;
         }
 
-        if (ExcludedDirectories.Contains(directory.Name, StringComparer.InvariantCultureIgnoreCase))
+        if (ExcludedDirectories.Contains(directory.Name, StringComparer.OrdinalIgnoreCase))
         {
             return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Resolves symlinks to get the real path.
+    /// </summary>
+    private static string GetRealPath(DirectoryInfo directory)
+    {
+        // On .NET 6+, we could use Path.GetFullPath with ResolveLinkTarget
+        // For netstandard2.0 compatibility, normalize the path
+        try
+        {
+            // Normalize path by getting DirectoryInfo.FullName which resolves . and ..
+            var fullPath = directory.FullName;
+
+            // On case-insensitive platforms, normalize to lowercase for consistent comparison
+            if (!PathUtilities.IsCaseSensitive)
+            {
+                fullPath = fullPath.ToLowerInvariant();
+            }
+
+            return fullPath;
+        }
+        catch
+        {
+            return directory.FullName;
+        }
+    }
+
+    /// <summary>
+    /// Checks if a directory is a symbolic link or junction point.
+    /// </summary>
+    private static bool IsSymbolicLinkOrJunction(DirectoryInfo directory)
+    {
+        try
+        {
+            return (directory.Attributes & FileAttributes.ReparsePoint) != 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

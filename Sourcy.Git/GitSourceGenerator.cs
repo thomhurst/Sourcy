@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Buffered;
@@ -11,6 +13,9 @@ namespace Sourcy.Git;
 [Generator]
 internal class GitSourceGenerator : BaseSourcyGenerator
 {
+    // Timeout for git commands - generous but prevents infinite hangs
+    private static readonly TimeSpan GitTimeout = TimeSpan.FromSeconds(30);
+
     protected override void Initialize(SourceProductionContext context, Root root)
     {
         ExecuteAsync(context, root).GetAwaiter().GetResult();
@@ -32,7 +37,8 @@ internal class GitSourceGenerator : BaseSourcyGenerator
                 .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
                 .ExecuteAsync(async () => await GetGitOutput(location!, ["rev-parse", "--show-toplevel"]));
 
-            rootPath = root;
+            // Normalize git's Unix-style output to platform-native path format
+            rootPath = NormalizeGitPath(root);
         }
         catch (Exception ex)
         {
@@ -49,7 +55,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
               internal static partial class Git
               {
-                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{rootPath}}");
+                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{EscapePathForVerbatimString(rootPath)}}");
               }
               """
         ));
@@ -65,7 +71,13 @@ internal class GitSourceGenerator : BaseSourcyGenerator
                 .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
                 .ExecuteAsync(async () => await GetGitOutput(location!, ["rev-parse", "--abbrev-ref", "HEAD"]));
 
-            branchName = branch;
+            branchName = branch.Trim();
+
+            // Handle detached HEAD state - try to get a more useful identifier
+            if (string.Equals(branchName, "HEAD", StringComparison.OrdinalIgnoreCase))
+            {
+                branchName = await GetDetachedHeadIdentifier(location!);
+            }
         }
         catch (Exception ex)
         {
@@ -82,18 +94,55 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
               internal static partial class Git
               {
-                  public static string BranchName { get; } = "{{branchName}}";
+                  public static string BranchName { get; } = "{{EscapeStringLiteral(branchName)}}";
               }
               """
         ));
     }
 
+    /// <summary>
+    /// Gets a useful identifier when in detached HEAD state.
+    /// Tries git describe first, then falls back to short commit hash.
+    /// </summary>
+    private static async Task<string> GetDetachedHeadIdentifier(string location)
+    {
+        try
+        {
+            // Try to get a tag-based description (e.g., "v1.0.0-5-g1234567")
+            var describe = await GetGitOutput(location, ["describe", "--tags", "--always"]);
+            return describe.Trim();
+        }
+        catch
+        {
+            try
+            {
+                // Fall back to short commit hash
+                var shortHash = await GetGitOutput(location, ["rev-parse", "--short", "HEAD"]);
+                return $"detached-{shortHash.Trim()}";
+            }
+            catch
+            {
+                return "detached-HEAD";
+            }
+        }
+    }
+
     private static async Task<string> GetGitOutput(string location, string[] args)
     {
-        var bufferedCommandResult = await Cli.Wrap("git")
-            .WithArguments(args)
-            .WithWorkingDirectory(location!)
-            .ExecuteBufferedAsync();
+        using var cts = new CancellationTokenSource(GitTimeout);
+
+        BufferedCommandResult bufferedCommandResult;
+        try
+        {
+            bufferedCommandResult = await Cli.Wrap("git")
+                .WithArguments(args)
+                .WithWorkingDirectory(location!)
+                .ExecuteBufferedAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TimeoutException($"git {string.Join(" ", args)} timed out after {GitTimeout.TotalSeconds} seconds");
+        }
 
         var output = bufferedCommandResult.StandardOutput.Trim();
 
@@ -102,11 +151,65 @@ internal class GitSourceGenerator : BaseSourcyGenerator
             throw new Exception($"git {string.Join(" ", args)} returned no output.");
         }
 
-        if(!string.IsNullOrWhiteSpace(bufferedCommandResult.StandardError))
+        // Only treat stderr as error if exit code is non-zero
+        // Git sometimes writes warnings to stderr even on success
+        if (bufferedCommandResult.ExitCode != 0 && !string.IsNullOrWhiteSpace(bufferedCommandResult.StandardError))
         {
-            throw new Exception($"git {string.Join(" ", args)} returned an error: {bufferedCommandResult.StandardError}");
+            throw new Exception($"git {string.Join(" ", args)} failed with exit code {bufferedCommandResult.ExitCode}: {bufferedCommandResult.StandardError}");
         }
 
         return output;
+    }
+
+    /// <summary>
+    /// Escapes a path for use in a verbatim string literal (@"...").
+    /// In verbatim strings, only quotes need escaping (doubled).
+    /// </summary>
+    private static string EscapePathForVerbatimString(string path)
+    {
+        return path.Replace("\"", "\"\"");
+    }
+
+    /// <summary>
+    /// Escapes a string for use in a regular string literal ("...").
+    /// </summary>
+    private static string EscapeStringLiteral(string value)
+    {
+        return value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\n", "\\n")
+            .Replace("\r", "\\r")
+            .Replace("\t", "\\t");
+    }
+
+    /// <summary>
+    /// Normalizes a path from git output to the platform-native format.
+    /// Git on Windows can return Unix-style paths like "C:/path" or "/c/path" (MSYS style).
+    /// </summary>
+    private static string NormalizeGitPath(string gitPath)
+    {
+        if (string.IsNullOrEmpty(gitPath))
+        {
+            return gitPath;
+        }
+
+        // Normalize line endings first
+        gitPath = gitPath.Replace("\r\n", "\n").Replace("\r", "\n").Trim();
+
+        // On Windows, convert forward slashes to backslashes
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Handle MSYS-style paths: /c/Users/... -> C:\Users\...
+            if (gitPath.Length >= 3 && gitPath[0] == '/' && char.IsLetter(gitPath[1]) && gitPath[2] == '/')
+            {
+                gitPath = $"{char.ToUpper(gitPath[1])}:{gitPath.Substring(2)}";
+            }
+
+            // Convert forward slashes to backslashes
+            gitPath = gitPath.Replace('/', '\\');
+        }
+
+        return gitPath;
     }
 }

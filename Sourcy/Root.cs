@@ -14,7 +14,7 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
     {
         return SafeWalk.EnumerateFiles(Directory);
     }
-    
+
     public IEnumerable<DirectoryInfo> EnumerateDirectories()
     {
         return SafeWalk.EnumerateDirectories(Directory);
@@ -56,7 +56,8 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
             rootPath += Path.DirectorySeparatorChar;
         }
 
-        if (filePath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
+        // Use platform-appropriate case comparison via centralized PathUtilities
+        if (PathUtilities.PathStartsWith(filePath, rootPath))
         {
             return filePath.Substring(rootPath.Length);
         }
