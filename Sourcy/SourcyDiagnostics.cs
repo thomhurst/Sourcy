@@ -33,6 +33,7 @@ internal static class SourcyDiagnostics
     private const string SymlinkCycleId = "SOURCY011";
     private const string MaxDepthReachedId = "SOURCY012";
     private const string RelativePathFallbackId = "SOURCY013";
+    private const string CloudPlaceholderId = "SOURCY014";
 
     // Diagnostic Descriptors
     public static readonly DiagnosticDescriptor RootNotFound = new(
@@ -225,6 +226,16 @@ internal static class SourcyDiagnostics
         description: "The relative path calculation encountered an issue and used a fallback method."
     );
 
+    public static readonly DiagnosticDescriptor CloudPlaceholder = new(
+        id: CloudPlaceholderId,
+        title: "Cloud placeholder file skipped",
+        messageFormat: "File '{0}' is a cloud placeholder (OneDrive/iCloud/Dropbox) and was skipped",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "Cloud sync placeholder files are not downloaded locally and cannot be reliably accessed during build."
+    );
+
     // Helper methods for reporting diagnostics
     public static void ReportRootNotFound(this SourceProductionContext context)
     {
@@ -319,5 +330,10 @@ internal static class SourcyDiagnostics
     public static void ReportRelativePathFallback(this SourceProductionContext context, string path, string reason)
     {
         context.ReportDiagnostic(Diagnostic.Create(RelativePathFallback, Location.None, path, reason));
+    }
+
+    public static void ReportCloudPlaceholder(this SourceProductionContext context, string path)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(CloudPlaceholder, Location.None, path));
     }
 }

@@ -21,7 +21,8 @@ public enum SkipReason
     SymlinkCycle,
     MaxDepthReached,
     ExcludedDirectory,
-    HiddenOrSystem
+    HiddenOrSystem,
+    CloudPlaceholder
 }
 
 /// <summary>
@@ -91,8 +92,18 @@ internal static class SafeWalk
 
             if (files != null)
             {
+                // Sort files for deterministic output across builds
+                Array.Sort(files, (a, b) => string.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
+
                 foreach (var file in files)
                 {
+                    // Skip cloud placeholder files (OneDrive, iCloud, Dropbox)
+                    if (IsCloudPlaceholder(file))
+                    {
+                        onSkipped?.Invoke(new SkippedPath(file.FullName, SkipReason.CloudPlaceholder));
+                        continue;
+                    }
+
                     yield return file;
                 }
             }
@@ -205,6 +216,9 @@ internal static class SafeWalk
         {
             yield break;
         }
+
+        // Sort directories for deterministic output across builds
+        Array.Sort(subDirectories, (a, b) => string.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
 
         foreach (var folder in subDirectories)
         {
@@ -469,6 +483,42 @@ internal static class SafeWalk
         }
         catch
         {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Checks if a file is a cloud placeholder (OneDrive, iCloud, Dropbox, etc.).
+    /// Cloud placeholders are files that exist in the cloud but aren't downloaded locally.
+    /// Accessing them can trigger downloads or fail unexpectedly.
+    /// </summary>
+    private static bool IsCloudPlaceholder(FileInfo file)
+    {
+        try
+        {
+            var attributes = file.Attributes;
+
+            // FileAttributes.Offline indicates the file data is not immediately available
+            // This is commonly used by cloud sync providers for placeholder files
+            if ((attributes & FileAttributes.Offline) != 0)
+            {
+                return true;
+            }
+
+            // ReparsePoint can indicate cloud placeholders on Windows (OneDrive, etc.)
+            // Combined with SparseFile, this often indicates a cloud placeholder
+            if ((attributes & FileAttributes.ReparsePoint) != 0 &&
+                (attributes & FileAttributes.SparseFile) != 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            // If we can't read attributes, assume it's not a placeholder
+            // The file might fail later but we'll handle that separately
             return false;
         }
     }
