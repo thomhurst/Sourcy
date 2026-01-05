@@ -61,6 +61,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
                 .WithArguments(["--version"])
                 .WithWorkingDirectory(location)
                 .WithValidation(CommandResultValidation.None)
+                .WithStandardInputPipe(PipeSource.Null) // Prevent credential prompts from hanging
                 .ExecuteBufferedAsync(cts.Token);
 
             if (result.ExitCode == 0 && !string.IsNullOrEmpty(result.StandardOutput))
@@ -287,6 +288,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
             bufferedCommandResult = await Cli.Wrap("git")
                 .WithArguments(args)
                 .WithWorkingDirectory(location)
+                .WithStandardInputPipe(PipeSource.Null) // Prevent credential prompts from hanging
                 .ExecuteBufferedAsync(cts.Token);
         }
         catch (OperationCanceledException)
