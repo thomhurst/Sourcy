@@ -283,7 +283,7 @@ internal static class SafeWalk
             var attributes = directory.Attributes;
 
             // Skip hidden directories (but allow on Linux where .folders are common)
-            if ((attributes & FileAttributes.Hidden) != 0 && !PathUtilities.IsCaseSensitive)
+            if ((attributes & FileAttributes.Hidden) != 0 && !RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 return (false, SkipReason.HiddenOrSystem);
             }
@@ -349,7 +349,7 @@ internal static class SafeWalk
                 fullPath = fullPath.ToLowerInvariant();
             }
 
-            return fullPath ?? directory.FullName;
+            return fullPath;
         }
         catch
         {

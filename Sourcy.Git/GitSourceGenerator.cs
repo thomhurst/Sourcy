@@ -76,9 +76,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
             context.ReportGitNotAvailable("Git command timed out - git may be hanging or unavailable");
             return false;
         }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception ||
-                                   ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
-                                   ex.Message.Contains("not recognized", StringComparison.OrdinalIgnoreCase))
+        catch (System.ComponentModel.Win32Exception)
         {
             context.ReportGitNotAvailable("Git executable not found. Ensure git is installed and available on PATH.");
             return false;
@@ -266,7 +264,8 @@ internal class GitSourceGenerator : BaseSourcyGenerator
     /// </summary>
     private static async Task<string> GetGitOutputCached(string location, string[] args, Dictionary<string, string> cache)
     {
-        var cacheKey = $"{location}|{string.Join("|", args)}";
+        // Use tuple-style key to avoid collision if location/args contain pipe characters
+        var cacheKey = (location, string.Join("\0", args)).GetHashCode().ToString();
 
         if (cache.TryGetValue(cacheKey, out var cachedResult))
         {
@@ -287,7 +286,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
         {
             bufferedCommandResult = await Cli.Wrap("git")
                 .WithArguments(args)
-                .WithWorkingDirectory(location!)
+                .WithWorkingDirectory(location)
                 .ExecuteBufferedAsync(cts.Token);
         }
         catch (OperationCanceledException)
