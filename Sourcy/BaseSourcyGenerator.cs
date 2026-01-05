@@ -304,7 +304,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         return SourceText.From(code, Encoding.UTF8);
     }
     
-    protected IEnumerable<SourceGeneratedPath> Distinct(Root root, List<FileInfo> files)
+    protected IEnumerable<SourceGeneratedPath> Distinct(Root root, List<FileInfo> files, SourceProductionContext? context = null)
     {
         var usedIdentifiers = new HashSet<string>();
 
@@ -322,7 +322,14 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
                         fileSystemInfo = file.Directory;
                     }
 
-                    var relativePath = root.MakeRelativePath(fileSystemInfo.FullName);
+                    var (relativePath, fallbackReason) = root.TryMakeRelativePath(fileSystemInfo.FullName);
+
+                    // Report fallback usage if context is provided
+                    if (fallbackReason != null && context.HasValue)
+                    {
+                        context.Value.ReportRelativePathFallback(fileSystemInfo.FullName, fallbackReason);
+                    }
+
                     var formattedName = IdentifierHelper.SanitizePathToIdentifier(relativePath, file.Extension);
 
                     // Ensure uniqueness

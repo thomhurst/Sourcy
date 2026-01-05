@@ -32,6 +32,7 @@ internal static class SourcyDiagnostics
     private const string InvalidCustomRootId = "SOURCY010";
     private const string SymlinkCycleId = "SOURCY011";
     private const string MaxDepthReachedId = "SOURCY012";
+    private const string RelativePathFallbackId = "SOURCY013";
 
     // Diagnostic Descriptors
     public static readonly DiagnosticDescriptor RootNotFound = new(
@@ -214,6 +215,16 @@ internal static class SourcyDiagnostics
         description: "Directory traversal was stopped to prevent performance issues with very deep hierarchies."
     );
 
+    public static readonly DiagnosticDescriptor RelativePathFallback = new(
+        id: RelativePathFallbackId,
+        title: "Relative path calculation used fallback",
+        messageFormat: "Path '{0}' could not be processed normally, using fallback method: {1}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "The relative path calculation encountered an issue and used a fallback method."
+    );
+
     // Helper methods for reporting diagnostics
     public static void ReportRootNotFound(this SourceProductionContext context)
     {
@@ -303,5 +314,10 @@ internal static class SourcyDiagnostics
     public static void ReportMaxDepthReached(this SourceProductionContext context, string path, int maxDepth)
     {
         context.ReportDiagnostic(Diagnostic.Create(MaxDepthReached, Location.None, path, maxDepth));
+    }
+
+    public static void ReportRelativePathFallback(this SourceProductionContext context, string path, string reason)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(RelativePathFallback, Location.None, path, reason));
     }
 }

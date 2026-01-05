@@ -20,8 +20,26 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
         return SafeWalk.EnumerateDirectories(Directory, onSkipped);
     }
 
+    /// <summary>
+    /// Makes a path relative to the root directory.
+    /// </summary>
     public string MakeRelativePath(string filePath)
     {
+        var (relativePath, _) = TryMakeRelativePath(filePath);
+        return relativePath;
+    }
+
+    /// <summary>
+    /// Makes a path relative to the root directory, returning info about whether fallback was used.
+    /// </summary>
+    /// <returns>A tuple of (relativePath, fallbackReason). fallbackReason is null if primary method succeeded.</returns>
+    public (string RelativePath, string? FallbackReason) TryMakeRelativePath(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            return (string.Empty, "Empty path");
+        }
+
         try
         {
             var fileUri = new Uri(filePath);
@@ -32,17 +50,19 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
             var relativeUri = rootUri.MakeRelativeUri(fileUri);
             var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
 
-            return relativePath.Replace('/', Path.DirectorySeparatorChar);
+            return (relativePath.Replace('/', Path.DirectorySeparatorChar), null);
         }
-        catch (UriFormatException)
+        catch (UriFormatException ex)
         {
-            // Fallback to string manipulation if Uri parsing fails
-            return MakeRelativePathFallback(filePath);
+            return (MakeRelativePathFallback(filePath), $"UriFormatException: {ex.Message}");
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
-            // MakeRelativeUri can throw if URIs can't be compared
-            return MakeRelativePathFallback(filePath);
+            return (MakeRelativePathFallback(filePath), $"InvalidOperationException: {ex.Message}");
+        }
+        catch (ArgumentNullException ex)
+        {
+            return (MakeRelativePathFallback(filePath), $"ArgumentNullException: {ex.Message}");
         }
     }
 

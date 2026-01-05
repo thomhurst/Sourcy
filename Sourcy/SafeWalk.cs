@@ -320,16 +320,25 @@ internal static class SafeWalk
     }
 
     /// <summary>
-    /// Resolves symlinks to get the real path.
+    /// Resolves symlinks to get the real/canonical path.
+    /// On Unix, this follows symlinks to their ultimate target.
+    /// On Windows, this resolves junctions and symlinks.
     /// </summary>
     private static string GetRealPath(DirectoryInfo directory)
     {
-        // On .NET 6+, we could use Path.GetFullPath with ResolveLinkTarget
-        // For netstandard2.0 compatibility, normalize the path
         try
         {
-            // Normalize path by getting DirectoryInfo.FullName which resolves . and ..
             var fullPath = directory.FullName;
+
+            // If this is a symlink/reparse point, try to resolve the target
+            if (IsSymbolicLinkOrJunction(directory))
+            {
+                var resolvedPath = ResolveSymlinkTarget(directory);
+                if (!string.IsNullOrEmpty(resolvedPath))
+                {
+                    fullPath = resolvedPath!;
+                }
+            }
 
             // On case-insensitive platforms, normalize to lowercase for consistent comparison
             if (!PathUtilities.IsCaseSensitive)
@@ -337,11 +346,112 @@ internal static class SafeWalk
                 fullPath = fullPath.ToLowerInvariant();
             }
 
-            return fullPath;
+            return fullPath ?? directory.FullName;
         }
         catch
         {
             return directory.FullName;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to resolve a symlink to its target path.
+    /// Uses .NET 6+ APIs via reflection, with fallback for older runtimes.
+    /// </summary>
+    private static string? ResolveSymlinkTarget(DirectoryInfo directory)
+    {
+        try
+        {
+            // Try .NET 6+ API via reflection: DirectoryInfo.ResolveLinkTarget(returnFinalTarget: true)
+            var resolveLinkTargetMethod = typeof(DirectoryInfo).GetMethod(
+                "ResolveLinkTarget",
+                new[] { typeof(bool) });
+
+            if (resolveLinkTargetMethod != null)
+            {
+                var result = resolveLinkTargetMethod.Invoke(directory, new object[] { true });
+                if (result is FileSystemInfo targetInfo)
+                {
+                    return targetInfo.FullName;
+                }
+            }
+
+            // Fallback: Try to get the link target on Unix systems using /proc or readlink
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return ResolveUnixSymlink(directory.FullName);
+            }
+
+            // On Windows, the full path from DirectoryInfo already resolves most cases
+            // For remaining edge cases, we accept the limitation on older .NET versions
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Resolves a symlink on Linux using /proc/self/fd trick or realpath-like behavior.
+    /// </summary>
+    private static string? ResolveUnixSymlink(string path)
+    {
+        try
+        {
+            // On Linux, we can use Directory.GetCurrentDirectory() trick with temporary chdir
+            // But that's not thread-safe. Instead, try to read the link iteratively.
+
+            var currentPath = path;
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+            const int maxIterations = 40; // Prevent infinite loops
+
+            for (int i = 0; i < maxIterations; i++)
+            {
+                if (!visited.Add(currentPath))
+                {
+                    // Cycle detected
+                    return currentPath;
+                }
+
+                var info = new DirectoryInfo(currentPath);
+                if (!IsSymbolicLinkOrJunction(info))
+                {
+                    // Not a symlink, we've resolved it
+                    return Path.GetFullPath(currentPath);
+                }
+
+                // Try to read the link target using .NET 6+ LinkTarget property
+                var linkTargetProperty = typeof(FileSystemInfo).GetProperty("LinkTarget");
+                if (linkTargetProperty != null)
+                {
+                    var target = linkTargetProperty.GetValue(info) as string;
+                    if (!string.IsNullOrEmpty(target))
+                    {
+                        // If relative, make it absolute relative to the symlink's directory
+                        if (!Path.IsPathRooted(target!))
+                        {
+                            var parentDir = Path.GetDirectoryName(currentPath);
+                            if (parentDir != null)
+                            {
+                                target = Path.GetFullPath(Path.Combine(parentDir, target!));
+                            }
+                        }
+                        currentPath = target!;
+                        continue;
+                    }
+                }
+
+                // Can't resolve further, return what we have
+                return Path.GetFullPath(currentPath);
+            }
+
+            // Max iterations reached, return current path
+            return Path.GetFullPath(currentPath);
+        }
+        catch
+        {
+            return null;
         }
     }
 

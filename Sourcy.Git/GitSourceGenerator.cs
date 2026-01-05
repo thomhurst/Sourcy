@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
@@ -105,7 +104,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
               internal static partial class Git
               {
-                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{EscapePathForVerbatimString(location)}}");
+                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{PathUtilities.EscapeForVerbatimString(location)}}");
               }
               """
         ));
@@ -153,7 +152,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
             if (!string.IsNullOrEmpty(superproject))
             {
-                context.ReportSubmoduleDetected(NormalizeGitPath(superproject));
+                context.ReportSubmoduleDetected(PathUtilities.NormalizeGitPath(superproject));
             }
         }
         catch
@@ -173,7 +172,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
                 .ExecuteAsync(async () => await GetGitOutputCached(location, ["rev-parse", "--show-toplevel"], cache));
 
             // Normalize git's Unix-style output to platform-native path format
-            rootPath = NormalizeGitPath(root);
+            rootPath = PathUtilities.NormalizeGitPath(root);
         }
         catch (Exception ex)
         {
@@ -190,7 +189,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
               internal static partial class Git
               {
-                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{EscapePathForVerbatimString(rootPath)}}");
+                  public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{PathUtilities.EscapeForVerbatimString(rootPath)}}");
               }
               """
         ));
@@ -229,7 +228,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
               internal static partial class Git
               {
-                  public static string BranchName { get; } = "{{EscapeStringLiteral(branchName)}}";
+                  public static string BranchName { get; } = "{{PathUtilities.EscapeForStringLiteral(branchName)}}";
               }
               """
         ));
@@ -311,57 +310,5 @@ internal class GitSourceGenerator : BaseSourcyGenerator
         }
 
         return output;
-    }
-
-    /// <summary>
-    /// Escapes a path for use in a verbatim string literal (@"...").
-    /// In verbatim strings, only quotes need escaping (doubled).
-    /// </summary>
-    private static string EscapePathForVerbatimString(string path)
-    {
-        return path.Replace("\"", "\"\"");
-    }
-
-    /// <summary>
-    /// Escapes a string for use in a regular string literal ("...").
-    /// </summary>
-    private static string EscapeStringLiteral(string value)
-    {
-        return value
-            .Replace("\\", "\\\\")
-            .Replace("\"", "\\\"")
-            .Replace("\n", "\\n")
-            .Replace("\r", "\\r")
-            .Replace("\t", "\\t");
-    }
-
-    /// <summary>
-    /// Normalizes a path from git output to the platform-native format.
-    /// Git on Windows can return Unix-style paths like "C:/path" or "/c/path" (MSYS style).
-    /// </summary>
-    private static string NormalizeGitPath(string gitPath)
-    {
-        if (string.IsNullOrEmpty(gitPath))
-        {
-            return gitPath;
-        }
-
-        // Normalize line endings first
-        gitPath = gitPath.Replace("\r\n", "\n").Replace("\r", "\n").Trim();
-
-        // On Windows, convert forward slashes to backslashes
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // Handle MSYS-style paths: /c/Users/... -> C:\Users\...
-            if (gitPath.Length >= 3 && gitPath[0] == '/' && char.IsLetter(gitPath[1]) && gitPath[2] == '/')
-            {
-                gitPath = $"{char.ToUpper(gitPath[1])}:{gitPath.Substring(2)}";
-            }
-
-            // Convert forward slashes to backslashes
-            gitPath = gitPath.Replace('/', '\\');
-        }
-
-        return gitPath;
     }
 }
