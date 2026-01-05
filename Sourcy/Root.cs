@@ -10,14 +10,14 @@ namespace Sourcy;
 [DebuggerDisplay("{Directory,nq}")]
 public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
 {
-    public IEnumerable<FileInfo> EnumerateFiles()
+    public IEnumerable<FileInfo> EnumerateFiles(SkippedPathCallback? onSkipped = null)
     {
-        return SafeWalk.EnumerateFiles(Directory);
+        return SafeWalk.EnumerateFiles(Directory, onSkipped);
     }
 
-    public IEnumerable<DirectoryInfo> EnumerateDirectories()
+    public IEnumerable<DirectoryInfo> EnumerateDirectories(SkippedPathCallback? onSkipped = null)
     {
-        return SafeWalk.EnumerateDirectories(Directory);
+        return SafeWalk.EnumerateDirectories(Directory, onSkipped);
     }
 
     public string MakeRelativePath(string filePath)

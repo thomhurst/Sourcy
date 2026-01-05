@@ -21,21 +21,119 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var sourcyDirectoryValuesProvider = context.AnalyzerConfigOptionsProvider
-            .Select((provider, _) => provider.GlobalOptions.TryGetValue("build_property.projectdir", out var directory)
-                ? directory
-                : null);
+        var sourcyOptionsProvider = context.AnalyzerConfigOptionsProvider
+            .Select((provider, _) =>
+            {
+                provider.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir);
+                provider.GlobalOptions.TryGetValue("build_property.SourcyRootPath", out var customRoot);
+                return (ProjectDir: projectDir, CustomRoot: customRoot);
+            });
 
-        context.RegisterSourceOutput(sourcyDirectoryValuesProvider, (productionContext, sourcyDirectory) =>
+        context.RegisterSourceOutput(sourcyOptionsProvider, (productionContext, options) =>
         {
-            if (sourcyDirectory is null || GetRootDirectory(sourcyDirectory) is not {} root)
+            Root? root = null;
+
+            // First, try custom root path if specified
+            if (!string.IsNullOrWhiteSpace(options.CustomRoot))
+            {
+                root = TryGetCustomRoot(productionContext, options.CustomRoot!);
+            }
+
+            // Fall back to auto-detection if custom root wasn't specified or was invalid
+            if (root is null)
+            {
+                if (options.ProjectDir is null)
+                {
+                    Debug.WriteLine("No Sourcy Directory found.");
+                    return;
+                }
+
+                root = GetRootDirectory(options.ProjectDir);
+            }
+
+            if (root is null)
             {
                 Debug.WriteLine("No Sourcy Directory found.");
+                productionContext.ReportRootNotFound();
                 return;
             }
 
+            // Check for UNC/network paths and warn
+            CheckForUncPath(productionContext, root.Directory.FullName);
+
             Initialize(productionContext, root);
         });
+    }
+
+    /// <summary>
+    /// Attempts to use a custom root path specified via SourcyRootPath MSBuild property.
+    /// </summary>
+    private static Root? TryGetCustomRoot(SourceProductionContext context, string customPath)
+    {
+        try
+        {
+            var trimmedPath = customPath.Trim();
+            if (string.IsNullOrEmpty(trimmedPath))
+            {
+                return null;
+            }
+
+            var directory = new DirectoryInfo(trimmedPath);
+            if (!directory.Exists)
+            {
+                context.ReportInvalidCustomRoot(trimmedPath);
+                return null;
+            }
+
+            context.ReportCustomRootUsed(trimmedPath);
+            return new Root(directory);
+        }
+        catch (Exception)
+        {
+            context.ReportInvalidCustomRoot(customPath);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the root path is a UNC/network path and emits a warning.
+    /// </summary>
+    private static void CheckForUncPath(SourceProductionContext context, string rootPath)
+    {
+        try
+        {
+            // Check for UNC paths (\\server\share or //server/share)
+            if (rootPath.StartsWith(@"\\", StringComparison.Ordinal) ||
+                rootPath.StartsWith("//", StringComparison.Ordinal))
+            {
+                context.ReportUncPath(rootPath);
+                return;
+            }
+
+            // On Windows, check if the drive is a network drive
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && rootPath.Length >= 2 && rootPath[1] == ':')
+            {
+                var driveLetter = rootPath[0];
+                var driveRoot = $"{driveLetter}:\\";
+
+                try
+                {
+                    var driveInfo = new DriveInfo(driveRoot);
+                    if (driveInfo.DriveType == DriveType.Network)
+                    {
+                        context.ReportUncPath($"Network drive {driveRoot}");
+                    }
+                }
+                catch
+                {
+                    // DriveInfo can throw for certain paths - ignore
+                }
+            }
+        }
+        catch
+        {
+            // Ignore errors in UNC detection - it's just a helpful warning
+        }
     }
 
     protected abstract void Initialize(SourceProductionContext context, Root root);

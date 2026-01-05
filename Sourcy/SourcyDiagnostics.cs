@@ -25,6 +25,13 @@ internal static class SourcyDiagnostics
     private const string UriFormatErrorId = "SOURCY009";
     private const string GenerationSuccessId = "SOURCY100";
     private const string FallbackUsedId = "SOURCY101";
+    private const string ShallowCloneId = "SOURCY102";
+    private const string UncPathId = "SOURCY103";
+    private const string SubmoduleDetectedId = "SOURCY104";
+    private const string CustomRootUsedId = "SOURCY105";
+    private const string InvalidCustomRootId = "SOURCY010";
+    private const string SymlinkCycleId = "SOURCY011";
+    private const string MaxDepthReachedId = "SOURCY012";
 
     // Diagnostic Descriptors
     public static readonly DiagnosticDescriptor RootNotFound = new(
@@ -70,7 +77,7 @@ internal static class SourcyDiagnostics
     public static readonly DiagnosticDescriptor GitNotAvailable = new(
         id: GitNotAvailableId,
         title: "Git is not available",
-        messageFormat: "Git is not installed or not available on PATH. Using fallback values: {0}",
+        messageFormat: "Git is not installed or not available on PATH, using fallback values: {0}",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -137,6 +144,76 @@ internal static class SourcyDiagnostics
         description: "A fallback value was used when the actual value could not be determined."
     );
 
+    public static readonly DiagnosticDescriptor ShallowClone = new(
+        id: ShallowCloneId,
+        title: "Shallow clone detected",
+        messageFormat: "Repository is a shallow clone. Some git operations may return incomplete results. Consider running 'git fetch --unshallow' for full history.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "The git repository is a shallow clone which may limit some git-related source generation."
+    );
+
+    public static readonly DiagnosticDescriptor UncPath = new(
+        id: UncPathId,
+        title: "UNC/Network path detected",
+        messageFormat: "Repository root is on a network path ({0}). This may cause slower build times and potential reliability issues.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Building from a network drive can cause performance and reliability issues."
+    );
+
+    public static readonly DiagnosticDescriptor SubmoduleDetected = new(
+        id: SubmoduleDetectedId,
+        title: "Git submodule detected",
+        messageFormat: "Project is within a git submodule with superproject root at {0}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "The project appears to be within a git submodule."
+    );
+
+    public static readonly DiagnosticDescriptor CustomRootUsed = new(
+        id: CustomRootUsedId,
+        title: "Custom root path used",
+        messageFormat: "Using custom root path from SourcyRootPath MSBuild property: {0}",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "A custom root path was specified via the SourcyRootPath MSBuild property."
+    );
+
+    public static readonly DiagnosticDescriptor InvalidCustomRoot = new(
+        id: InvalidCustomRootId,
+        title: "Invalid custom root path",
+        messageFormat: "SourcyRootPath '{0}' is invalid or does not exist. Falling back to auto-detection.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The specified SourcyRootPath is invalid, does not exist, or is not accessible."
+    );
+
+    public static readonly DiagnosticDescriptor SymlinkCycle = new(
+        id: SymlinkCycleId,
+        title: "Symlink cycle detected",
+        messageFormat: "Skipped symlink cycle at '{0}' pointing to already-visited '{1}'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "A symbolic link creates a cycle and was skipped to prevent infinite recursion."
+    );
+
+    public static readonly DiagnosticDescriptor MaxDepthReached = new(
+        id: MaxDepthReachedId,
+        title: "Maximum directory depth reached",
+        messageFormat: "Stopped traversing at '{0}' - maximum depth of {1} reached",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "Directory traversal was stopped to prevent performance issues with very deep hierarchies."
+    );
+
     // Helper methods for reporting diagnostics
     public static void ReportRootNotFound(this SourceProductionContext context)
     {
@@ -191,5 +268,40 @@ internal static class SourcyDiagnostics
     public static void ReportFallbackUsed(this SourceProductionContext context, string propertyName, string fallbackValue)
     {
         context.ReportDiagnostic(Diagnostic.Create(FallbackUsed, Location.None, propertyName, fallbackValue));
+    }
+
+    public static void ReportShallowClone(this SourceProductionContext context)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(ShallowClone, Location.None));
+    }
+
+    public static void ReportUncPath(this SourceProductionContext context, string path)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(UncPath, Location.None, path));
+    }
+
+    public static void ReportSubmoduleDetected(this SourceProductionContext context, string superprojectRoot)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(SubmoduleDetected, Location.None, superprojectRoot));
+    }
+
+    public static void ReportCustomRootUsed(this SourceProductionContext context, string customPath)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(CustomRootUsed, Location.None, customPath));
+    }
+
+    public static void ReportInvalidCustomRoot(this SourceProductionContext context, string invalidPath)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(InvalidCustomRoot, Location.None, invalidPath));
+    }
+
+    public static void ReportSymlinkCycle(this SourceProductionContext context, string symlinkPath, string targetPath)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(SymlinkCycle, Location.None, symlinkPath, targetPath));
+    }
+
+    public static void ReportMaxDepthReached(this SourceProductionContext context, string path, int maxDepth)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(MaxDepthReached, Location.None, path, maxDepth));
     }
 }

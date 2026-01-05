@@ -8,14 +8,54 @@ using System.Runtime.InteropServices;
 
 namespace Sourcy;
 
+/// <summary>
+/// Describes why a path was skipped during enumeration.
+/// </summary>
+public enum SkipReason
+{
+    UnauthorizedAccess,
+    DirectoryNotFound,
+    PathTooLong,
+    IoError,
+    SecurityException,
+    SymlinkCycle,
+    MaxDepthReached,
+    ExcludedDirectory,
+    HiddenOrSystem
+}
+
+/// <summary>
+/// Information about a skipped path during enumeration.
+/// </summary>
+public readonly struct SkippedPath
+{
+    public string Path { get; }
+    public SkipReason Reason { get; }
+    public string? TargetPath { get; } // For symlink cycles
+    public int? Depth { get; } // For max depth
+
+    public SkippedPath(string path, SkipReason reason, string? targetPath = null, int? depth = null)
+    {
+        Path = path;
+        Reason = reason;
+        TargetPath = targetPath;
+        Depth = depth;
+    }
+}
+
+/// <summary>
+/// Callback delegate for reporting skipped paths during enumeration.
+/// </summary>
+public delegate void SkippedPathCallback(SkippedPath skippedPath);
+
 internal static class SafeWalk
 {
     // Maximum depth to prevent runaway recursion
     private const int MaxDepth = 50;
 
-    public static IEnumerable<FileInfo> EnumerateFiles(DirectoryInfo directory)
+    public static IEnumerable<FileInfo> EnumerateFiles(DirectoryInfo directory, SkippedPathCallback? onSkipped = null)
     {
-        foreach (var dir in EnumerateDirectories(directory))
+        foreach (var dir in EnumerateDirectories(directory, onSkipped))
         {
             FileInfo[]? files = null;
 
@@ -25,27 +65,27 @@ internal static class SafeWalk
             }
             catch (UnauthorizedAccessException)
             {
-                // Skip directories we don't have permission to read
+                onSkipped?.Invoke(new SkippedPath(dir.FullName, SkipReason.UnauthorizedAccess));
                 continue;
             }
             catch (DirectoryNotFoundException)
             {
-                // Directory was deleted after we found it
+                onSkipped?.Invoke(new SkippedPath(dir.FullName, SkipReason.DirectoryNotFound));
                 continue;
             }
             catch (PathTooLongException)
             {
-                // Path exceeds system limits
+                onSkipped?.Invoke(new SkippedPath(dir.FullName, SkipReason.PathTooLong));
                 continue;
             }
             catch (IOException)
             {
-                // I/O error (file locked, network issue, etc.)
+                onSkipped?.Invoke(new SkippedPath(dir.FullName, SkipReason.IoError));
                 continue;
             }
             catch (System.Security.SecurityException)
             {
-                // Security policy prevents access
+                onSkipped?.Invoke(new SkippedPath(dir.FullName, SkipReason.SecurityException));
                 continue;
             }
 
@@ -78,26 +118,33 @@ internal static class SafeWalk
         ".Trash", ".Spotlight-V100", ".fseventsd"
     ];
 
-    public static IEnumerable<DirectoryInfo> EnumerateDirectories(DirectoryInfo directory)
+    public static IEnumerable<DirectoryInfo> EnumerateDirectories(DirectoryInfo directory, SkippedPathCallback? onSkipped = null)
     {
         // Use a visited set to detect symlink cycles with platform-appropriate case sensitivity
         var visited = new HashSet<string>(PathUtilities.PathComparer);
-        return EnumerateDirectoriesInternal(directory, visited, 0);
+        return EnumerateDirectoriesInternal(directory, visited, 0, onSkipped);
     }
 
     private static IEnumerable<DirectoryInfo> EnumerateDirectoriesInternal(
         DirectoryInfo directory,
         HashSet<string> visited,
-        int depth)
+        int depth,
+        SkippedPathCallback? onSkipped)
     {
         // Prevent infinite recursion from deep directories
         if (depth > MaxDepth)
         {
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.MaxDepthReached, depth: MaxDepth));
             yield break;
         }
 
-        if (!ShouldSearchDirectory(directory))
+        var (shouldSearch, skipReason) = ShouldSearchDirectoryWithReason(directory);
+        if (!shouldSearch)
         {
+            if (skipReason.HasValue)
+            {
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, skipReason.Value));
+            }
             yield break;
         }
 
@@ -109,13 +156,14 @@ internal static class SafeWalk
         }
         catch
         {
-            // If we can't resolve the path, skip it
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.IoError));
             yield break;
         }
 
         // Check for cycles (symlink pointing to parent directory)
         if (!visited.Add(realPath))
         {
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.SymlinkCycle, targetPath: realPath));
             yield break;
         }
 
@@ -129,27 +177,27 @@ internal static class SafeWalk
         }
         catch (UnauthorizedAccessException)
         {
-            // Can't access this directory's subdirectories
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.UnauthorizedAccess));
             yield break;
         }
         catch (DirectoryNotFoundException)
         {
-            // Directory was deleted after we found it
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.DirectoryNotFound));
             yield break;
         }
         catch (PathTooLongException)
         {
-            // Path exceeds system limits
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.PathTooLong));
             yield break;
         }
         catch (IOException)
         {
-            // I/O error (network issue, disk error, etc.)
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.IoError));
             yield break;
         }
         catch (System.Security.SecurityException)
         {
-            // Security policy prevents access
+            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.SecurityException));
             yield break;
         }
 
@@ -170,30 +218,36 @@ internal static class SafeWalk
                     var targetPath = GetRealPath(folder);
                     if (visited.Contains(targetPath))
                     {
-                        continue; // Skip symlink cycle
+                        onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.SymlinkCycle, targetPath: targetPath));
+                        continue;
                     }
                 }
 
-                innerFolders = EnumerateDirectoriesInternal(folder, visited, depth + 1);
+                innerFolders = EnumerateDirectoriesInternal(folder, visited, depth + 1, onSkipped);
             }
             catch (UnauthorizedAccessException)
             {
+                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.UnauthorizedAccess));
                 continue;
             }
             catch (DirectoryNotFoundException)
             {
+                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.DirectoryNotFound));
                 continue;
             }
             catch (PathTooLongException)
             {
+                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.PathTooLong));
                 continue;
             }
             catch (IOException)
             {
+                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.IoError));
                 continue;
             }
             catch (System.Security.SecurityException)
             {
+                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.SecurityException));
                 continue;
             }
 
@@ -209,12 +263,18 @@ internal static class SafeWalk
 
     private static bool ShouldSearchDirectory(DirectoryInfo directory)
     {
+        var (shouldSearch, _) = ShouldSearchDirectoryWithReason(directory);
+        return shouldSearch;
+    }
+
+    private static (bool ShouldSearch, SkipReason? Reason) ShouldSearchDirectoryWithReason(DirectoryInfo directory)
+    {
         try
         {
             // Check if directory still exists
             if (!directory.Exists)
             {
-                return false;
+                return (false, SkipReason.DirectoryNotFound);
             }
 
             var attributes = directory.Attributes;
@@ -222,32 +282,41 @@ internal static class SafeWalk
             // Skip hidden directories (but allow on Linux where .folders are common)
             if ((attributes & FileAttributes.Hidden) != 0 && PathUtilities.IsCaseSensitive == false)
             {
-                return false;
+                return (false, SkipReason.HiddenOrSystem);
             }
 
             // Skip system directories
             if ((attributes & FileAttributes.System) != 0)
             {
-                return false;
+                return (false, SkipReason.HiddenOrSystem);
             }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return (false, SkipReason.UnauthorizedAccess);
+        }
+        catch (System.Security.SecurityException)
+        {
+            return (false, SkipReason.SecurityException);
         }
         catch
         {
             // If we can't read attributes, skip the directory
-            return false;
+            return (false, SkipReason.IoError);
         }
 
         if (File.Exists(Path.Combine(directory.FullName, ".sourcyignore")))
         {
-            return false;
+            // Explicitly ignored - no reason needed as this is intentional
+            return (false, null);
         }
 
         if (ExcludedDirectories.Contains(directory.Name, StringComparer.OrdinalIgnoreCase))
         {
-            return false;
+            return (false, SkipReason.ExcludedDirectory);
         }
 
-        return true;
+        return (true, null);
     }
 
     /// <summary>
