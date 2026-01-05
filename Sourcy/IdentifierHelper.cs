@@ -151,6 +151,9 @@ internal static class IdentifierHelper
     /// <summary>
     /// Computes a stable hash using FNV-1a algorithm.
     /// Unlike GetHashCode(), this produces the same result across different runs and processes.
+    /// Note: This hashes UTF-16 char values directly, so different Unicode normalizations
+    /// of the same logical string may produce different hashes. This is acceptable for
+    /// file path identifiers which are typically ASCII or consistently encoded by the OS.
     /// </summary>
     private static uint GetStableHash(string input)
     {

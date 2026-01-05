@@ -221,6 +221,9 @@ internal static class SafeWalk
                         onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.SymlinkCycle, targetPath: targetPath));
                         continue;
                     }
+
+                    // Mark the symlink target as visited to avoid revisiting it via other symlinks
+                    visited.Add(targetPath);
                 }
 
                 innerFolders = EnumerateDirectoriesInternal(folder, visited, depth + 1, onSkipped);
@@ -280,7 +283,7 @@ internal static class SafeWalk
             var attributes = directory.Attributes;
 
             // Skip hidden directories (but allow on Linux where .folders are common)
-            if ((attributes & FileAttributes.Hidden) != 0 && PathUtilities.IsCaseSensitive == false)
+            if ((attributes & FileAttributes.Hidden) != 0 && !PathUtilities.IsCaseSensitive)
             {
                 return (false, SkipReason.HiddenOrSystem);
             }

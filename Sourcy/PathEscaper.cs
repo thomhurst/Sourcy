@@ -13,7 +13,9 @@ internal static class PathUtilities
 {
     /// <summary>
     /// Gets whether the current platform uses case-sensitive paths.
-    /// Linux is case-sensitive, Windows and macOS are case-insensitive.
+    /// Linux is treated as case-sensitive; Windows and macOS are treated as case-insensitive.
+    /// Note: macOS can be configured with a case-sensitive file system (APFS Case-sensitive),
+    /// which this property does not detect. The default APFS and HFS+ configurations are case-insensitive.
     /// </summary>
     public static bool IsCaseSensitive => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
