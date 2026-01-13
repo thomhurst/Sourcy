@@ -6,4 +6,9 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
+    <!-- Include props file in NuGet package for MSBuild-based root detection -->
+    <ItemGroup>
+        <None Include="build\**\*" Pack="true" PackagePath="build" />
+    </ItemGroup>
+
 </Project>
