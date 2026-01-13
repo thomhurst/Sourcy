@@ -1,0 +1,30 @@
+<Project>
+  <!--
+    Sourcy Root Detection
+    =====================
+    This props file uses MSBuild's GetDirectoryNameOfFileAbove to find the repository root
+    at MSBuild evaluation time, which is more reliable than walking the directory tree
+    at source generator execution time.
+
+    Priority order:
+    1. .sourcyroot (explicit marker file - highest priority)
+    2. .git (standard git repository marker)
+    3. Directory.Build.props (MSBuild convention)
+    4. global.json (.NET SDK convention)
+
+    Users can override by setting SourcyRootPath explicitly in their project file.
+  -->
+
+  <PropertyGroup>
+    <!-- Only compute if not already set by user -->
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), '.sourcyroot'))</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), '.git'))</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Directory.Build.props'))</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'global.json'))</SourcyRootPath>
+  </PropertyGroup>
+
+  <!-- Make SourcyRootPath visible to source generators via AnalyzerConfigOptionsProvider -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="SourcyRootPath" />
+  </ItemGroup>
+</Project>

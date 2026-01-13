@@ -41,9 +41,34 @@ dotnet test --filter "FullyQualifiedName~DotNetTests.Can_Find_Projects"
 ### Source Generator Design
 
 All generators inherit from `BaseSourcyGenerator` (in Sourcy/BaseSourcyGenerator.cs) which implements `IIncrementalGenerator`. The base class:
-- Locates the repository root by searching upward for `.git` folder or `.sourcyroot` file
+- Locates the repository root using MSBuild-based detection (preferred) or C# fallback
 - Provides utilities for generating source code with `GetSourceText()`
 - Implements name collision handling via `Distinct()` method for duplicate file names
+
+#### Root Directory Detection
+
+Sourcy uses a two-tier approach to find the repository root:
+
+**Tier 1: MSBuild-based detection** (in `Sourcy.Core/build/Sourcy.Core.props`)
+Uses MSBuild's `GetDirectoryNameOfFileAbove()` at evaluation time, which is faster and more reliable. Priority order:
+1. `.sourcyroot` - Explicit marker file (highest priority)
+2. `.git` - Standard git repository
+3. `Directory.Build.props` - MSBuild convention
+4. `global.json` - .NET SDK convention
+
+**Tier 2: C# fallback** (in `BaseSourcyGenerator.GetRootDirectory()`)
+If MSBuild detection fails, the generator walks up the directory tree checking for the same markers.
+
+**Custom Root Override:**
+Users can explicitly set the root path in their project file:
+```xml
+<PropertyGroup>
+  <SourcyRootPath>C:\path\to\root</SourcyRootPath>
+</PropertyGroup>
+```
+
+**Git Worktrees and Submodules:**
+Sourcy correctly handles git worktrees and submodules where `.git` is a file (not directory) containing a `gitdir:` reference
 
 Each generator implements `Initialize(SourceProductionContext context, Root root)`:
 - **Sourcy.Git**: Executes `git` commands via CliWrap with Polly retry logic to get root directory and branch name

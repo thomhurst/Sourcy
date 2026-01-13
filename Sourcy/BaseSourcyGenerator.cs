@@ -1,6 +1,7 @@
 #pragma warning disable RS1035
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -18,6 +19,10 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
 {
     // Maximum number of parent directories to traverse when looking for root
     private const int MaxRootSearchDepth = 30;
+
+    // Cache for root directory lookups to avoid repeated file system traversals
+    // when multiple generators run for the same project
+    private static readonly ConcurrentDictionary<string, Root?> RootCache = new(PathUtilities.PathComparer);
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -145,6 +150,22 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             return null;
         }
 
+        // Check cache first to avoid repeated file system traversals
+        if (RootCache.TryGetValue(path, out var cachedRoot))
+        {
+            return cachedRoot;
+        }
+
+        var root = GetRootDirectoryCore(path);
+
+        // Cache the result (including null results to avoid repeated failed lookups)
+        RootCache.TryAdd(path, root);
+
+        return root;
+    }
+
+    private static Root? GetRootDirectoryCore(string path)
+    {
         DirectoryInfo? location;
         try
         {
@@ -167,17 +188,38 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         {
             try
             {
-                var gitPath = Path.Combine(location.FullName, ".git");
+                // Priority order:
+                // 1. .sourcyroot (explicit marker - highest priority)
+                // 2. .git (standard git repository)
+                // 3. Directory.Build.props (MSBuild convention)
+                // 4. global.json (.NET SDK convention)
                 var sourcyRootPath = Path.Combine(location.FullName, ".sourcyroot");
+                var gitPath = Path.Combine(location.FullName, ".git");
+                var directoryBuildPropsPath = Path.Combine(location.FullName, "Directory.Build.props");
+                var globalJsonPath = Path.Combine(location.FullName, "global.json");
 
-                // Check for .git as directory (normal repo) OR file (git worktree)
-                // In worktrees, .git is a file containing: "gitdir: /path/to/actual/git/dir"
-                if (DirectoryExistsSafe(gitPath) || IsGitWorktreeFile(gitPath))
+                // Check .sourcyroot first (highest priority)
+                if (FileExistsSafe(sourcyRootPath))
                 {
                     break;
                 }
 
-                if (FileExistsSafe(sourcyRootPath))
+                // Check for .git as directory (normal repo) OR file (git worktree/submodule)
+                // In worktrees, .git is a file containing: "gitdir: /path/to/actual/git/dir"
+                // In submodules, .git is a file containing: "gitdir: ../.git/modules/submodule-name"
+                if (DirectoryExistsSafe(gitPath) || IsGitWorktreeOrSubmoduleFile(gitPath))
+                {
+                    break;
+                }
+
+                // Check Directory.Build.props (MSBuild convention)
+                if (FileExistsSafe(directoryBuildPropsPath))
+                {
+                    break;
+                }
+
+                // Check global.json (.NET SDK convention)
+                if (FileExistsSafe(globalJsonPath))
                 {
                     break;
                 }
@@ -230,10 +272,14 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// Checks if the path is a git worktree file.
-    /// In git worktrees, .git is a file (not directory) containing "gitdir: /path/to/git/dir".
+    /// Checks if the path is a git worktree or submodule file.
+    /// In git worktrees/submodules, .git is a file (not directory) containing "gitdir: /path/to/git/dir".
     /// </summary>
-    private static bool IsGitWorktreeFile(string gitPath)
+    /// <remarks>
+    /// Worktree format: "gitdir: /path/to/main/repo/.git/worktrees/worktree-name"
+    /// Submodule format: "gitdir: ../.git/modules/submodule-name"
+    /// </remarks>
+    private static bool IsGitWorktreeOrSubmoduleFile(string gitPath)
     {
         try
         {
@@ -243,7 +289,6 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
             }
 
             // Read first line to check for gitdir reference
-            // Format: "gitdir: /path/to/main/repo/.git/worktrees/worktree-name"
             using var reader = new StreamReader(gitPath);
             var firstLine = reader.ReadLine();
             return firstLine != null && firstLine.StartsWith("gitdir:", StringComparison.OrdinalIgnoreCase);
