@@ -50,6 +50,7 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
                 if (options.ProjectDir is null)
                 {
                     Debug.WriteLine("No Sourcy Directory found.");
+                    productionContext.ReportNoProjectDir();
                     return;
                 }
 

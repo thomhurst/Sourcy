@@ -133,9 +133,10 @@ internal class GitSourceGenerator : BaseSourcyGenerator
                 context.ReportShallowClone();
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore errors - shallow clone detection is informational only
+            // Shallow clone detection is informational - report as unexpected error for edge case debugging
+            context.ReportUnexpectedError("CheckShallowClone", ex);
         }
     }
 
@@ -154,9 +155,10 @@ internal class GitSourceGenerator : BaseSourcyGenerator
                 context.ReportSubmoduleDetected(PathUtilities.NormalizeGitPath(superproject));
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore errors - submodule detection is informational only
+            // Submodule detection is informational - report as unexpected error for edge case debugging
+            context.ReportUnexpectedError("CheckSubmodule", ex);
         }
     }
 

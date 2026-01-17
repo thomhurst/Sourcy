@@ -34,6 +34,8 @@ internal static class SourcyDiagnostics
     private const string MaxDepthReachedId = "SOURCY012";
     private const string RelativePathFallbackId = "SOURCY013";
     private const string CloudPlaceholderId = "SOURCY014";
+    private const string UnexpectedErrorId = "SOURCY015";
+    private const string NoProjectDirId = "SOURCY016";
 
     // Diagnostic Descriptors
     public static readonly DiagnosticDescriptor RootNotFound = new(
@@ -236,6 +238,26 @@ internal static class SourcyDiagnostics
         description: "Cloud sync placeholder files are not downloaded locally and cannot be reliably accessed during build."
     );
 
+    public static readonly DiagnosticDescriptor UnexpectedError = new(
+        id: UnexpectedErrorId,
+        title: "Unexpected error during source generation",
+        messageFormat: "Sourcy encountered an unexpected error in {0}: {1}. Please report this issue at https://github.com/thomhurst/Sourcy/issues",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "An unexpected error occurred during source generation. This may indicate a bug in Sourcy or an edge case in your environment."
+    );
+
+    public static readonly DiagnosticDescriptor NoProjectDir = new(
+        id: NoProjectDirId,
+        title: "Project directory not available",
+        messageFormat: "The project directory could not be determined. Ensure build_property.ProjectDir is set. This may occur in unusual build configurations.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Sourcy could not determine the project directory, which is required to locate the repository root."
+    );
+
     // Helper methods for reporting diagnostics
     public static void ReportRootNotFound(this SourceProductionContext context)
     {
@@ -335,5 +357,15 @@ internal static class SourcyDiagnostics
     public static void ReportCloudPlaceholder(this SourceProductionContext context, string path)
     {
         context.ReportDiagnostic(Diagnostic.Create(CloudPlaceholder, Location.None, path));
+    }
+
+    public static void ReportUnexpectedError(this SourceProductionContext context, string location, Exception exception)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(UnexpectedError, Location.None, location, $"{exception.GetType().Name}: {exception.Message}"));
+    }
+
+    public static void ReportNoProjectDir(this SourceProductionContext context)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(NoProjectDir, Location.None));
     }
 }
