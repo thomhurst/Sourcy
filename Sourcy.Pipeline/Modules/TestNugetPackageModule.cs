@@ -30,7 +30,8 @@ public class TestNugetPackageModule : Module<CommandResult[]>
                         Framework = framework,
                         Properties =
                         [
-                            new KeyValue("SourcyVersion", version.Value!)
+                            new KeyValue("SourcyVersion", version.Value!),
+                            new KeyValue("SourcyDiagnostics", "true")
                         ]
                     }, cancellationToken)
                 )

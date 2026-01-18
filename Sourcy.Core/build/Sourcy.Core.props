@@ -11,124 +11,175 @@
     4. Directory.Build.props (MSBuild convention - checked last as nested projects may have their own)
 
     Users can override by setting SourcyRootPath explicitly in their project file.
+
+    Diagnostics:
+    - Set SourcyDiagnostics=true to enable detailed diagnostic output during build
+    - SOURCY_DIAG001: Shows the final resolved SourcyRootPath
+    - SOURCY_DIAG002: Shows path detection details when SourcyDiagnostics=true
   -->
 
   <!-- 1. Check for explicit .sourcyroot marker file -->
   <PropertyGroup>
     <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), '.sourcyroot'))</SourcyRootPath>
+    <_SourcyDetectionMethod Condition="'$(SourcyRootPath)' != ''">.sourcyroot marker file</_SourcyDetectionMethod>
   </PropertyGroup>
 
   <!--
-    2. .git detection using System.IO to find both directories and files.
-    GetDirectoryNameOfFileAbove only finds files, but .git is usually a directory.
+    2. .git detection using Exists() which works for both files and directories.
     Walk up to 10 levels to find .git (as directory OR file for worktrees/submodules).
     Uses Path.Combine for cross-platform path construction.
-
-    First, compute all the directory levels and .git paths.
   -->
+
+  <!-- Level 0: Project directory -->
   <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
-    <_SourcyL0>$(MSBuildProjectDirectory)</_SourcyL0>
-    <_SourcyL1>$([System.IO.Path]::GetDirectoryName('$(_SourcyL0)'))</_SourcyL1>
-    <_SourcyL2>$([System.IO.Path]::GetDirectoryName('$(_SourcyL1)'))</_SourcyL2>
-    <_SourcyL3>$([System.IO.Path]::GetDirectoryName('$(_SourcyL2)'))</_SourcyL3>
-    <_SourcyL4>$([System.IO.Path]::GetDirectoryName('$(_SourcyL3)'))</_SourcyL4>
-    <_SourcyL5>$([System.IO.Path]::GetDirectoryName('$(_SourcyL4)'))</_SourcyL5>
-    <_SourcyL6>$([System.IO.Path]::GetDirectoryName('$(_SourcyL5)'))</_SourcyL6>
-    <_SourcyL7>$([System.IO.Path]::GetDirectoryName('$(_SourcyL6)'))</_SourcyL7>
-    <_SourcyL8>$([System.IO.Path]::GetDirectoryName('$(_SourcyL7)'))</_SourcyL8>
-    <_SourcyL9>$([System.IO.Path]::GetDirectoryName('$(_SourcyL8)'))</_SourcyL9>
+    <_SourcyGitPath0>$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '.git'))</_SourcyGitPath0>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and Exists('$(_SourcyGitPath0)')">
+    <SourcyRootPath>$(MSBuildProjectDirectory)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at project directory</_SourcyDetectionMethod>
   </PropertyGroup>
 
-  <!-- Build .git paths in a separate PropertyGroup to ensure parent paths are evaluated first -->
+  <!-- Level 1 -->
   <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
-    <_SourcyGit0>$([System.IO.Path]::Combine('$(_SourcyL0)', '.git'))</_SourcyGit0>
-    <_SourcyGit1>$([System.IO.Path]::Combine('$(_SourcyL1)', '.git'))</_SourcyGit1>
-    <_SourcyGit2>$([System.IO.Path]::Combine('$(_SourcyL2)', '.git'))</_SourcyGit2>
-    <_SourcyGit3>$([System.IO.Path]::Combine('$(_SourcyL3)', '.git'))</_SourcyGit3>
-    <_SourcyGit4>$([System.IO.Path]::Combine('$(_SourcyL4)', '.git'))</_SourcyGit4>
-    <_SourcyGit5>$([System.IO.Path]::Combine('$(_SourcyL5)', '.git'))</_SourcyGit5>
-    <_SourcyGit6>$([System.IO.Path]::Combine('$(_SourcyL6)', '.git'))</_SourcyGit6>
-    <_SourcyGit7>$([System.IO.Path]::Combine('$(_SourcyL7)', '.git'))</_SourcyGit7>
-    <_SourcyGit8>$([System.IO.Path]::Combine('$(_SourcyL8)', '.git'))</_SourcyGit8>
-    <_SourcyGit9>$([System.IO.Path]::Combine('$(_SourcyL9)', '.git'))</_SourcyGit9>
+    <_SourcyParent1>$([System.IO.Path]::GetDirectoryName('$(MSBuildProjectDirectory)'))</_SourcyParent1>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent1)' != ''">
+    <_SourcyGitPath1>$([System.IO.Path]::Combine('$(_SourcyParent1)', '.git'))</_SourcyGitPath1>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent1)' != '' and Exists('$(_SourcyGitPath1)')">
+    <SourcyRootPath>$(_SourcyParent1)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 1</_SourcyDetectionMethod>
   </PropertyGroup>
 
-  <!-- Check each level for .git directory -->
-  <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit0)'))">$(_SourcyL0)</SourcyRootPath>
+  <!-- Level 2 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent1)' != ''">
+    <_SourcyParent2>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent1)'))</_SourcyParent2>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL1)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit1)'))">$(_SourcyL1)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent2)' != ''">
+    <_SourcyGitPath2>$([System.IO.Path]::Combine('$(_SourcyParent2)', '.git'))</_SourcyGitPath2>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL2)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit2)'))">$(_SourcyL2)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL3)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit3)'))">$(_SourcyL3)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL4)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit4)'))">$(_SourcyL4)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL5)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit5)'))">$(_SourcyL5)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL6)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit6)'))">$(_SourcyL6)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL7)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit7)'))">$(_SourcyL7)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL8)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit8)'))">$(_SourcyL8)</SourcyRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL9)' != ''">
-    <SourcyRootPath Condition="$([System.IO.Directory]::Exists('$(_SourcyGit9)'))">$(_SourcyL9)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent2)' != '' and Exists('$(_SourcyGitPath2)')">
+    <SourcyRootPath>$(_SourcyParent2)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 2</_SourcyDetectionMethod>
   </PropertyGroup>
 
-  <!-- Check each level for .git file (worktrees/submodules) -->
-  <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit0)'))">$(_SourcyL0)</SourcyRootPath>
+  <!-- Level 3 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent2)' != ''">
+    <_SourcyParent3>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent2)'))</_SourcyParent3>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL1)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit1)'))">$(_SourcyL1)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent3)' != ''">
+    <_SourcyGitPath3>$([System.IO.Path]::Combine('$(_SourcyParent3)', '.git'))</_SourcyGitPath3>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL2)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit2)'))">$(_SourcyL2)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent3)' != '' and Exists('$(_SourcyGitPath3)')">
+    <SourcyRootPath>$(_SourcyParent3)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 3</_SourcyDetectionMethod>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL3)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit3)'))">$(_SourcyL3)</SourcyRootPath>
+
+  <!-- Level 4 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent3)' != ''">
+    <_SourcyParent4>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent3)'))</_SourcyParent4>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL4)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit4)'))">$(_SourcyL4)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent4)' != ''">
+    <_SourcyGitPath4>$([System.IO.Path]::Combine('$(_SourcyParent4)', '.git'))</_SourcyGitPath4>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL5)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit5)'))">$(_SourcyL5)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent4)' != '' and Exists('$(_SourcyGitPath4)')">
+    <SourcyRootPath>$(_SourcyParent4)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 4</_SourcyDetectionMethod>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL6)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit6)'))">$(_SourcyL6)</SourcyRootPath>
+
+  <!-- Level 5 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent4)' != ''">
+    <_SourcyParent5>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent4)'))</_SourcyParent5>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL7)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit7)'))">$(_SourcyL7)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent5)' != ''">
+    <_SourcyGitPath5>$([System.IO.Path]::Combine('$(_SourcyParent5)', '.git'))</_SourcyGitPath5>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL8)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit8)'))">$(_SourcyL8)</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent5)' != '' and Exists('$(_SourcyGitPath5)')">
+    <SourcyRootPath>$(_SourcyParent5)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 5</_SourcyDetectionMethod>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL9)' != ''">
-    <SourcyRootPath Condition="$([System.IO.File]::Exists('$(_SourcyGit9)'))">$(_SourcyL9)</SourcyRootPath>
+
+  <!-- Level 6 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent5)' != ''">
+    <_SourcyParent6>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent5)'))</_SourcyParent6>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent6)' != ''">
+    <_SourcyGitPath6>$([System.IO.Path]::Combine('$(_SourcyParent6)', '.git'))</_SourcyGitPath6>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent6)' != '' and Exists('$(_SourcyGitPath6)')">
+    <SourcyRootPath>$(_SourcyParent6)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 6</_SourcyDetectionMethod>
+  </PropertyGroup>
+
+  <!-- Level 7 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent6)' != ''">
+    <_SourcyParent7>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent6)'))</_SourcyParent7>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent7)' != ''">
+    <_SourcyGitPath7>$([System.IO.Path]::Combine('$(_SourcyParent7)', '.git'))</_SourcyGitPath7>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent7)' != '' and Exists('$(_SourcyGitPath7)')">
+    <SourcyRootPath>$(_SourcyParent7)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 7</_SourcyDetectionMethod>
+  </PropertyGroup>
+
+  <!-- Level 8 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent7)' != ''">
+    <_SourcyParent8>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent7)'))</_SourcyParent8>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent8)' != ''">
+    <_SourcyGitPath8>$([System.IO.Path]::Combine('$(_SourcyParent8)', '.git'))</_SourcyGitPath8>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent8)' != '' and Exists('$(_SourcyGitPath8)')">
+    <SourcyRootPath>$(_SourcyParent8)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 8</_SourcyDetectionMethod>
+  </PropertyGroup>
+
+  <!-- Level 9 -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent8)' != ''">
+    <_SourcyParent9>$([System.IO.Path]::GetDirectoryName('$(_SourcyParent8)'))</_SourcyParent9>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent9)' != ''">
+    <_SourcyGitPath9>$([System.IO.Path]::Combine('$(_SourcyParent9)', '.git'))</_SourcyGitPath9>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == '' and '$(_SourcyParent9)' != '' and Exists('$(_SourcyGitPath9)')">
+    <SourcyRootPath>$(_SourcyParent9)</SourcyRootPath>
+    <_SourcyDetectionMethod>.git at level 9</_SourcyDetectionMethod>
   </PropertyGroup>
 
   <!-- 3. Fallback to global.json -->
-  <PropertyGroup>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'global.json'))</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
+    <SourcyRootPath>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'global.json'))</SourcyRootPath>
+    <_SourcyDetectionMethod Condition="'$(SourcyRootPath)' != ''">global.json</_SourcyDetectionMethod>
   </PropertyGroup>
 
   <!-- 4. Fallback to Directory.Build.props -->
-  <PropertyGroup>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Directory.Build.props'))</SourcyRootPath>
+  <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
+    <SourcyRootPath>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Directory.Build.props'))</SourcyRootPath>
+    <_SourcyDetectionMethod Condition="'$(SourcyRootPath)' != ''">Directory.Build.props</_SourcyDetectionMethod>
   </PropertyGroup>
 
   <!-- Make SourcyRootPath visible to source generators via AnalyzerConfigOptionsProvider -->
   <ItemGroup>
     <CompilerVisibleProperty Include="SourcyRootPath" />
   </ItemGroup>
+
+  <!-- Diagnostic output target - runs before build when SourcyDiagnostics=true -->
+  <Target Name="_SourcyDiagnosticOutput" BeforeTargets="BeforeBuild" Condition="'$(SourcyDiagnostics)' == 'true'">
+    <Message Importance="High" Text="SOURCY_DIAG: Project directory: $(MSBuildProjectDirectory)" />
+    <Message Importance="High" Text="SOURCY_DIAG: SourcyRootPath: $(SourcyRootPath)" />
+    <Message Importance="High" Text="SOURCY_DIAG: Detection method: $(_SourcyDetectionMethod)" />
+    <Message Importance="High" Text="SOURCY_DIAG: Parent1: $(_SourcyParent1)" />
+    <Message Importance="High" Text="SOURCY_DIAG: Parent2: $(_SourcyParent2)" />
+    <Message Importance="High" Text="SOURCY_DIAG: Parent3: $(_SourcyParent3)" />
+    <Message Importance="High" Text="SOURCY_DIAG: GitPath0: $(_SourcyGitPath0)" />
+    <Message Importance="High" Text="SOURCY_DIAG: GitPath1: $(_SourcyGitPath1)" />
+    <Message Importance="High" Text="SOURCY_DIAG: GitPath2: $(_SourcyGitPath2)" />
+    <Message Importance="High" Text="SOURCY_DIAG: GitPath3: $(_SourcyGitPath3)" />
+  </Target>
+
+  <!-- Warning if root not found -->
+  <Target Name="_SourcyRootNotFoundWarning" BeforeTargets="BeforeBuild" Condition="'$(SourcyRootPath)' == ''">
+    <Warning Code="SOURCY_MSB001" Text="Sourcy could not detect repository root. Ensure a .git directory, .sourcyroot file, global.json, or Directory.Build.props exists in a parent directory. Set SourcyDiagnostics=true for detailed diagnostic output." />
+  </Target>
 </Project>
