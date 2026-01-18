@@ -22,6 +22,7 @@
     .git detection using System.IO to find both directories and files.
     GetDirectoryNameOfFileAbove only finds files, but .git is usually a directory.
     Walk up to 10 levels to find .git (as directory OR file for worktrees/submodules).
+    Uses Path.Combine for cross-platform path construction.
   -->
   <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
     <_SourcyL0>$(MSBuildProjectDirectory)</_SourcyL0>
@@ -35,17 +36,29 @@
     <_SourcyL8>$([System.IO.Path]::GetDirectoryName('$(_SourcyL7)'))</_SourcyL8>
     <_SourcyL9>$([System.IO.Path]::GetDirectoryName('$(_SourcyL8)'))</_SourcyL9>
 
+    <!-- Build .git paths using Path.Combine for cross-platform compatibility -->
+    <_SourcyGit0>$([System.IO.Path]::Combine('$(_SourcyL0)', '.git'))</_SourcyGit0>
+    <_SourcyGit1>$([System.IO.Path]::Combine('$(_SourcyL1)', '.git'))</_SourcyGit1>
+    <_SourcyGit2>$([System.IO.Path]::Combine('$(_SourcyL2)', '.git'))</_SourcyGit2>
+    <_SourcyGit3>$([System.IO.Path]::Combine('$(_SourcyL3)', '.git'))</_SourcyGit3>
+    <_SourcyGit4>$([System.IO.Path]::Combine('$(_SourcyL4)', '.git'))</_SourcyGit4>
+    <_SourcyGit5>$([System.IO.Path]::Combine('$(_SourcyL5)', '.git'))</_SourcyGit5>
+    <_SourcyGit6>$([System.IO.Path]::Combine('$(_SourcyL6)', '.git'))</_SourcyGit6>
+    <_SourcyGit7>$([System.IO.Path]::Combine('$(_SourcyL7)', '.git'))</_SourcyGit7>
+    <_SourcyGit8>$([System.IO.Path]::Combine('$(_SourcyL8)', '.git'))</_SourcyGit8>
+    <_SourcyGit9>$([System.IO.Path]::Combine('$(_SourcyL9)', '.git'))</_SourcyGit9>
+
     <!-- Check each level for .git (directory or file) -->
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and ($([System.IO.Directory]::Exists('$(_SourcyL0)\.git')) or $([System.IO.File]::Exists('$(_SourcyL0)\.git')))">$(_SourcyL0)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL1)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL1)\.git')) or $([System.IO.File]::Exists('$(_SourcyL1)\.git')))">$(_SourcyL1)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL2)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL2)\.git')) or $([System.IO.File]::Exists('$(_SourcyL2)\.git')))">$(_SourcyL2)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL3)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL3)\.git')) or $([System.IO.File]::Exists('$(_SourcyL3)\.git')))">$(_SourcyL3)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL4)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL4)\.git')) or $([System.IO.File]::Exists('$(_SourcyL4)\.git')))">$(_SourcyL4)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL5)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL5)\.git')) or $([System.IO.File]::Exists('$(_SourcyL5)\.git')))">$(_SourcyL5)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL6)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL6)\.git')) or $([System.IO.File]::Exists('$(_SourcyL6)\.git')))">$(_SourcyL6)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL7)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL7)\.git')) or $([System.IO.File]::Exists('$(_SourcyL7)\.git')))">$(_SourcyL7)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL8)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL8)\.git')) or $([System.IO.File]::Exists('$(_SourcyL8)\.git')))">$(_SourcyL8)</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL9)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL9)\.git')) or $([System.IO.File]::Exists('$(_SourcyL9)\.git')))">$(_SourcyL9)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and ($([System.IO.Directory]::Exists('$(_SourcyGit0)')) or $([System.IO.File]::Exists('$(_SourcyGit0)')))">$(_SourcyL0)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL1)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit1)')) or $([System.IO.File]::Exists('$(_SourcyGit1)')))">$(_SourcyL1)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL2)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit2)')) or $([System.IO.File]::Exists('$(_SourcyGit2)')))">$(_SourcyL2)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL3)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit3)')) or $([System.IO.File]::Exists('$(_SourcyGit3)')))">$(_SourcyL3)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL4)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit4)')) or $([System.IO.File]::Exists('$(_SourcyGit4)')))">$(_SourcyL4)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL5)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit5)')) or $([System.IO.File]::Exists('$(_SourcyGit5)')))">$(_SourcyL5)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL6)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit6)')) or $([System.IO.File]::Exists('$(_SourcyGit6)')))">$(_SourcyL6)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL7)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit7)')) or $([System.IO.File]::Exists('$(_SourcyGit7)')))">$(_SourcyL7)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL8)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit8)')) or $([System.IO.File]::Exists('$(_SourcyGit8)')))">$(_SourcyL8)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL9)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyGit9)')) or $([System.IO.File]::Exists('$(_SourcyGit9)')))">$(_SourcyL9)</SourcyRootPath>
   </PropertyGroup>
 
   <!-- Fallback to global.json, then Directory.Build.props -->
