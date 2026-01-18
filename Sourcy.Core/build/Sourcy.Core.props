@@ -2,15 +2,13 @@
   <!--
     Sourcy Root Detection
     =====================
-    This props file uses MSBuild's GetDirectoryNameOfFileAbove to find the repository root
-    at MSBuild evaluation time, which is more reliable than walking the directory tree
-    at source generator execution time.
+    This props file finds the repository root at MSBuild evaluation time.
 
     Priority order:
     1. .sourcyroot (explicit marker file - highest priority)
-    2. .git (standard git repository marker)
-    3. Directory.Build.props (MSBuild convention)
-    4. global.json (.NET SDK convention)
+    2. .git (as directory or file - handles normal repos, worktrees, and submodules)
+    3. global.json (.NET SDK convention)
+    4. Directory.Build.props (MSBuild convention - checked last as nested projects may have their own)
 
     Users can override by setting SourcyRootPath explicitly in their project file.
   -->
@@ -18,9 +16,42 @@
   <PropertyGroup>
     <!-- Only compute if not already set by user -->
     <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), '.sourcyroot'))</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), '.git'))</SourcyRootPath>
-    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Directory.Build.props'))</SourcyRootPath>
+  </PropertyGroup>
+
+  <!--
+    .git detection using System.IO to find both directories and files.
+    GetDirectoryNameOfFileAbove only finds files, but .git is usually a directory.
+    Walk up to 10 levels to find .git (as directory OR file for worktrees/submodules).
+  -->
+  <PropertyGroup Condition="'$(SourcyRootPath)' == ''">
+    <_SourcyL0>$(MSBuildProjectDirectory)</_SourcyL0>
+    <_SourcyL1>$([System.IO.Path]::GetDirectoryName('$(_SourcyL0)'))</_SourcyL1>
+    <_SourcyL2>$([System.IO.Path]::GetDirectoryName('$(_SourcyL1)'))</_SourcyL2>
+    <_SourcyL3>$([System.IO.Path]::GetDirectoryName('$(_SourcyL2)'))</_SourcyL3>
+    <_SourcyL4>$([System.IO.Path]::GetDirectoryName('$(_SourcyL3)'))</_SourcyL4>
+    <_SourcyL5>$([System.IO.Path]::GetDirectoryName('$(_SourcyL4)'))</_SourcyL5>
+    <_SourcyL6>$([System.IO.Path]::GetDirectoryName('$(_SourcyL5)'))</_SourcyL6>
+    <_SourcyL7>$([System.IO.Path]::GetDirectoryName('$(_SourcyL6)'))</_SourcyL7>
+    <_SourcyL8>$([System.IO.Path]::GetDirectoryName('$(_SourcyL7)'))</_SourcyL8>
+    <_SourcyL9>$([System.IO.Path]::GetDirectoryName('$(_SourcyL8)'))</_SourcyL9>
+
+    <!-- Check each level for .git (directory or file) -->
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and ($([System.IO.Directory]::Exists('$(_SourcyL0)\.git')) or $([System.IO.File]::Exists('$(_SourcyL0)\.git')))">$(_SourcyL0)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL1)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL1)\.git')) or $([System.IO.File]::Exists('$(_SourcyL1)\.git')))">$(_SourcyL1)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL2)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL2)\.git')) or $([System.IO.File]::Exists('$(_SourcyL2)\.git')))">$(_SourcyL2)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL3)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL3)\.git')) or $([System.IO.File]::Exists('$(_SourcyL3)\.git')))">$(_SourcyL3)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL4)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL4)\.git')) or $([System.IO.File]::Exists('$(_SourcyL4)\.git')))">$(_SourcyL4)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL5)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL5)\.git')) or $([System.IO.File]::Exists('$(_SourcyL5)\.git')))">$(_SourcyL5)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL6)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL6)\.git')) or $([System.IO.File]::Exists('$(_SourcyL6)\.git')))">$(_SourcyL6)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL7)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL7)\.git')) or $([System.IO.File]::Exists('$(_SourcyL7)\.git')))">$(_SourcyL7)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL8)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL8)\.git')) or $([System.IO.File]::Exists('$(_SourcyL8)\.git')))">$(_SourcyL8)</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == '' and '$(_SourcyL9)' != '' and ($([System.IO.Directory]::Exists('$(_SourcyL9)\.git')) or $([System.IO.File]::Exists('$(_SourcyL9)\.git')))">$(_SourcyL9)</SourcyRootPath>
+  </PropertyGroup>
+
+  <!-- Fallback to global.json, then Directory.Build.props -->
+  <PropertyGroup>
     <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'global.json'))</SourcyRootPath>
+    <SourcyRootPath Condition="'$(SourcyRootPath)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Directory.Build.props'))</SourcyRootPath>
   </PropertyGroup>
 
   <!-- Make SourcyRootPath visible to source generators via AnalyzerConfigOptionsProvider -->

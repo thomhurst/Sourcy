@@ -50,11 +50,11 @@ All generators inherit from `BaseSourcyGenerator` (in Sourcy/BaseSourcyGenerator
 Sourcy uses a two-tier approach to find the repository root:
 
 **Tier 1: MSBuild-based detection** (in `Sourcy.Core/build/Sourcy.Core.props`)
-Uses MSBuild's `GetDirectoryNameOfFileAbove()` at evaluation time, which is faster and more reliable. Priority order:
+Uses MSBuild property functions at evaluation time. Priority order:
 1. `.sourcyroot` - Explicit marker file (highest priority)
-2. `.git` - Standard git repository
-3. `Directory.Build.props` - MSBuild convention
-4. `global.json` - .NET SDK convention
+2. `.git` - Uses `System.IO.Directory.Exists` and `System.IO.File.Exists` to find `.git` as either directory (normal repos) or file (worktrees/submodules), walking up to 10 parent directories
+3. `global.json` - .NET SDK convention
+4. `Directory.Build.props` - MSBuild convention (checked last as nested projects may have their own)
 
 **Tier 2: C# fallback** (in `BaseSourcyGenerator.GetRootDirectory()`)
 If MSBuild detection fails, the generator walks up the directory tree checking for the same markers.
