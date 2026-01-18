@@ -147,7 +147,9 @@ internal class GitSourceGenerator : BaseSourcyGenerator
     {
         try
         {
-            var result = await GetGitOutputCached(location, ["rev-parse", "--show-superproject-working-tree"], cache);
+            // Note: git rev-parse --show-superproject-working-tree returns empty output when NOT a submodule,
+            // which is expected behavior. We use GetGitOutputAllowEmpty to handle this gracefully.
+            var result = await GetGitOutputAllowEmptyCached(location, ["rev-parse", "--show-superproject-working-tree"], cache);
             var superproject = result.Trim();
 
             if (!string.IsNullOrEmpty(superproject))
@@ -280,6 +282,24 @@ internal class GitSourceGenerator : BaseSourcyGenerator
         return result;
     }
 
+    /// <summary>
+    /// Gets git output with caching, allowing empty output (for commands like --show-superproject-working-tree
+    /// that return empty when the condition is not met).
+    /// </summary>
+    private static async Task<string> GetGitOutputAllowEmptyCached(string location, string[] args, Dictionary<string, string> cache)
+    {
+        var cacheKey = (location, string.Join("\0", args), "allow-empty").GetHashCode().ToString();
+
+        if (cache.TryGetValue(cacheKey, out var cachedResult))
+        {
+            return cachedResult;
+        }
+
+        var result = await GetGitOutputAllowEmpty(location, args);
+        cache[cacheKey] = result;
+        return result;
+    }
+
     private static async Task<string> GetGitOutput(string location, string[] args)
     {
         using var cts = new CancellationTokenSource(GitTimeout);
@@ -313,5 +333,36 @@ internal class GitSourceGenerator : BaseSourcyGenerator
         }
 
         return output;
+    }
+
+    /// <summary>
+    /// Gets git output, allowing empty output for commands that may legitimately return nothing.
+    /// </summary>
+    private static async Task<string> GetGitOutputAllowEmpty(string location, string[] args)
+    {
+        using var cts = new CancellationTokenSource(GitTimeout);
+
+        BufferedCommandResult bufferedCommandResult;
+        try
+        {
+            bufferedCommandResult = await Cli.Wrap("git")
+                .WithArguments(args)
+                .WithWorkingDirectory(location)
+                .WithStandardInputPipe(PipeSource.Null) // Prevent credential prompts from hanging
+                .ExecuteBufferedAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TimeoutException($"git {string.Join(" ", args)} timed out after {GitTimeout.TotalSeconds} seconds");
+        }
+
+        // Only treat stderr as error if exit code is non-zero
+        // Git sometimes writes warnings to stderr even on success
+        if (bufferedCommandResult.ExitCode != 0 && !string.IsNullOrWhiteSpace(bufferedCommandResult.StandardError))
+        {
+            throw new Exception($"git {string.Join(" ", args)} failed with exit code {bufferedCommandResult.ExitCode}: {bufferedCommandResult.StandardError}");
+        }
+
+        return bufferedCommandResult.StandardOutput.Trim();
     }
 }
