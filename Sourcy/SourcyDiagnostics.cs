@@ -241,7 +241,7 @@ internal static class SourcyDiagnostics
     public static readonly DiagnosticDescriptor UnexpectedError = new(
         id: UnexpectedErrorId,
         title: "Unexpected error during source generation",
-        messageFormat: "Sourcy encountered an unexpected error in {0}: {1}. Please report this issue at https://github.com/thomhurst/Sourcy/issues",
+        messageFormat: "Sourcy encountered an unexpected error in {0}: {1}. Report this issue at https://github.com/thomhurst/Sourcy/issues.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
