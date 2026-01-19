@@ -15,9 +15,9 @@ namespace Sourcy.Pipeline.Modules;
 [DependsOn<RunUnitTestsModule>]
 public class PackProjectsModule : Module<CommandResult[]>
 {
-    protected override async Task<CommandResult[]?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult[]?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
-        var packageVersion = await GetModule<NugetVersionGeneratorModule>();
+        var packageVersion = await context.GetModule<NugetVersionGeneratorModule>();
 
         IEnumerable<FileInfo> projects =
             [
@@ -30,16 +30,16 @@ public class PackProjectsModule : Module<CommandResult[]>
             ];
 
         return await projects.SelectAsync(project =>
-                Pack(context, project, packageVersion.Value!, cancellationToken))
+                Pack(context, project, packageVersion.ValueOrDefault!, cancellationToken))
             .ProcessOneAtATime();
     }
 
-    private static async Task<CommandResult> Pack(IPipelineContext context, File projectFile, string packageVersion, CancellationToken cancellationToken)
+    private static async Task<CommandResult> Pack(IModuleContext context, File projectFile, string packageVersion, CancellationToken cancellationToken)
     {
         return await context.DotNet().Pack(new DotNetPackOptions
         {
             ProjectSolution = projectFile.Path,
-            Configuration = Configuration.Release,
+            Configuration = "Release",
             IncludeSource = projectFile == Projects.Sourcy_Core,
             Properties = new List<KeyValue>
             {
@@ -47,6 +47,6 @@ public class PackProjectsModule : Module<CommandResult[]>
                 ("Version", packageVersion),
                 ("IsPack", "true")
             },
-        }, cancellationToken);
+        }, cancellationToken: cancellationToken);
     }
 }

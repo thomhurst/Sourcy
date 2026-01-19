@@ -1,4 +1,4 @@
-﻿using EnumerableAsyncProcessor.Extensions;
+using EnumerableAsyncProcessor.Extensions;
 using ModularPipelines.Attributes;
 using ModularPipelines.Context;
 using ModularPipelines.DotNet.Extensions;
@@ -15,25 +15,25 @@ public class TestNugetPackageModule : Module<CommandResult[]>
 {
     private readonly string[] _frameworks = ["net8.0"];
 
-    protected override async Task<CommandResult[]?> ExecuteAsync(IPipelineContext context,
+    protected override async Task<CommandResult[]?> ExecuteAsync(IModuleContext context,
         CancellationToken cancellationToken)
     {
-        var version = await GetModule<NugetVersionGeneratorModule>();
+        var version = await context.GetModule<NugetVersionGeneratorModule>();
 
         var project = DotNet.Projects.Sourcy_NuGet_Tests;
 
         return await _frameworks.SelectAsync(framework =>
-                SubModule(framework, () =>
+                context.SubModule(framework, () =>
                     context.DotNet().Run(new DotNetRunOptions
                     {
                         Project = project.FullName,
                         Framework = framework,
                         Properties =
                         [
-                            new KeyValue("SourcyVersion", version.Value!),
+                            new KeyValue("SourcyVersion", version.ValueOrDefault!),
                             new KeyValue("SourcyDiagnostics", "true")
                         ]
-                    }, cancellationToken)
+                    }, cancellationToken: cancellationToken)
                 )
             , cancellationToken: cancellationToken).ProcessOneAtATime();
     }

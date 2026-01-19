@@ -9,18 +9,18 @@ namespace Sourcy.Pipeline.Modules;
 
 public class RunUnitTestsModule : Module<CommandResult>
 {
-    protected override async Task<CommandResult?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         return await Run(context, DotNet.Projects.Sourcy_Tests, cancellationToken);
     }
 
-    private static async Task<CommandResult> Run(IPipelineContext context, File unitTestProjectFile, CancellationToken cancellationToken)
+    private static async Task<CommandResult> Run(IModuleContext context, File unitTestProjectFile, CancellationToken cancellationToken)
     {
         var dotNetTestOptions = new DotNetTestOptions
         {
-            ProjectSolutionDirectoryDllExe = unitTestProjectFile.Path
+            Project = unitTestProjectFile.Path
         };
-        
-        return await context.DotNet().Test(dotNetTestOptions, cancellationToken);
+
+        return await context.DotNet().Test(dotNetTestOptions, cancellationToken: cancellationToken);
     }
 }

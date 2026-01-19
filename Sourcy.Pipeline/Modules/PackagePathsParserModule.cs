@@ -8,13 +8,13 @@ namespace Sourcy.Pipeline.Modules;
 [DependsOn<PackProjectsModule>]
 public class PackagePathsParserModule : Module<List<File>>
 {
-    protected override async Task<List<File>?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<List<File>?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
-        var packPackagesModuleResult = await GetModule<PackProjectsModule>();
+        var packPackagesModuleResult = await context.GetModule<PackProjectsModule>();
 
         const string packageMarker = "Successfully created package '";
 
-        return packPackagesModuleResult.Value!
+        return packPackagesModuleResult.ValueOrDefault!
             .SelectMany(x => x.StandardOutput.Split('\n'))
             .Select(line => line.Trim())
             .Where(line => line.Contains(packageMarker))

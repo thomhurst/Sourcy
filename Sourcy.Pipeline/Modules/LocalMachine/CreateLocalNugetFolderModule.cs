@@ -10,17 +10,14 @@ namespace Sourcy.Pipeline.Modules.LocalMachine;
 [DependsOn<PackagePathsParserModule>]
 public class CreateLocalNugetFolderModule : Module<Folder>
 {
-    protected override async Task<Folder?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override Task<Folder?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
-        var localNugetRepositoryFolder = context.FileSystem.GetFolder(Environment.SpecialFolder.ApplicationData)
-            .GetFolder("ModularPipelines")
-            .GetFolder("LocalNuget")
-            .Create();
-        
-        await Task.Yield();
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var localNugetRepositoryFolder = new Folder(Path.Combine(localAppData, "ModularPipelines", "LocalNuget"));
+        localNugetRepositoryFolder.Create();
 
         context.Logger.LogInformation("Local NuGet Repository Path: {Path}", localNugetRepositoryFolder.Path);
 
-        return localNugetRepositoryFolder;
+        return Task.FromResult<Folder?>(localNugetRepositoryFolder);
     }
 }
