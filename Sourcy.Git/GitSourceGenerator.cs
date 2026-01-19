@@ -101,6 +101,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
             $$"""
               namespace Sourcy;
 
+              [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Sourcy.Git", "1.0.0")]
               internal static partial class Git
               {
                   public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{PathUtilities.EscapeForVerbatimString(location)}}");
@@ -170,7 +171,10 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
         try
         {
-            var root = await Policy.Handle<Exception>()
+            var root = await Policy
+                .Handle<TimeoutException>()
+                .Or<IOException>()
+                .Or<InvalidOperationException>()
                 .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
                 .ExecuteAsync(async () => await GetGitOutputCached(location, ["rev-parse", "--show-toplevel"], cache));
 
@@ -190,6 +194,7 @@ internal class GitSourceGenerator : BaseSourcyGenerator
             $$"""
               namespace Sourcy;
 
+              [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Sourcy.Git", "1.0.0")]
               internal static partial class Git
               {
                   public static global::System.IO.DirectoryInfo RootDirectory { get; } = new global::System.IO.DirectoryInfo(@"{{PathUtilities.EscapeForVerbatimString(rootPath)}}");
@@ -204,7 +209,10 @@ internal class GitSourceGenerator : BaseSourcyGenerator
 
         try
         {
-            var branch = await Policy.Handle<Exception>()
+            var branch = await Policy
+                .Handle<TimeoutException>()
+                .Or<IOException>()
+                .Or<InvalidOperationException>()
                 .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(i))
                 .ExecuteAsync(async () => await GetGitOutputCached(location, ["rev-parse", "--abbrev-ref", "HEAD"], cache));
 
@@ -269,8 +277,8 @@ internal class GitSourceGenerator : BaseSourcyGenerator
     /// </summary>
     private static async Task<string> GetGitOutputCached(string location, string[] args, Dictionary<string, string> cache)
     {
-        // Use tuple-style key to avoid collision if location/args contain pipe characters
-        var cacheKey = (location, string.Join("\0", args)).GetHashCode().ToString();
+        // Use explicit string key for stable, collision-free caching
+        var cacheKey = $"{location}\0{string.Join("\0", args)}";
 
         if (cache.TryGetValue(cacheKey, out var cachedResult))
         {
@@ -288,7 +296,8 @@ internal class GitSourceGenerator : BaseSourcyGenerator
     /// </summary>
     private static async Task<string> GetGitOutputAllowEmptyCached(string location, string[] args, Dictionary<string, string> cache)
     {
-        var cacheKey = (location, string.Join("\0", args), "allow-empty").GetHashCode().ToString();
+        // Use explicit string key with suffix for stable, collision-free caching
+        var cacheKey = $"{location}\0{string.Join("\0", args)}\0allow-empty";
 
         if (cache.TryGetValue(cacheKey, out var cachedResult))
         {

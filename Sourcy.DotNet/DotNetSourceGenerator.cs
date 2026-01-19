@@ -47,18 +47,19 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         }
     }
 
-    private void WriteProjects(SourceProductionContext context, IEnumerable<SourceGeneratedPath> projects)
+    private static void WriteProjects(SourceProductionContext context, IEnumerable<SourceGeneratedPath> projects)
     {
         var sourceBuilder = new StringBuilder();
 
         sourceBuilder.AppendLine("namespace Sourcy.DotNet;");
         sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"Sourcy.DotNet\", \"1.0.0\")]");
         sourceBuilder.AppendLine("internal static class Projects");
         sourceBuilder.AppendLine("{");
 
         foreach (var project in projects)
         {
-            var escapedPath = PathEscaper.EscapeForVerbatimString(project.File.FullName);
+            var escapedPath = PathUtilities.EscapeForVerbatimString(project.File.FullName);
             sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {project.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{escapedPath}\");");
         }
 
@@ -67,18 +68,19 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
         context.AddSource("DotNetProjectExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
     }
 
-    private void WriteSolutions(SourceProductionContext context, IEnumerable<SourceGeneratedPath> solutions)
+    private static void WriteSolutions(SourceProductionContext context, IEnumerable<SourceGeneratedPath> solutions)
     {
         var sourceBuilder = new StringBuilder();
 
         sourceBuilder.AppendLine("namespace Sourcy.DotNet;");
         sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"Sourcy.DotNet\", \"1.0.0\")]");
         sourceBuilder.AppendLine("internal static class Solutions");
         sourceBuilder.AppendLine("{");
 
         foreach (var solution in solutions)
         {
-            var escapedPath = PathEscaper.EscapeForVerbatimString(solution.File.FullName);
+            var escapedPath = PathUtilities.EscapeForVerbatimString(solution.File.FullName);
             sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {solution.Name} {{ get; }} = new global::System.IO.FileInfo(@\"{escapedPath}\");");
         }
 

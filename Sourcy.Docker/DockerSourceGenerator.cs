@@ -33,6 +33,7 @@ internal class DockerSourceGenerator : BaseSourcyGenerator
 
         sourceBuilder.AppendLine("namespace Sourcy.Docker;");
         sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"Sourcy.Docker\", \"1.0.0\")]");
         sourceBuilder.AppendLine("internal static class Dockerfiles");
         sourceBuilder.AppendLine("{");
 
@@ -44,7 +45,7 @@ internal class DockerSourceGenerator : BaseSourcyGenerator
                     dockerfile.Directory!.Name,
                     usedIdentifiers);
 
-                var escapedPath = PathEscaper.EscapeForVerbatimString(dockerfile.FullName);
+                var escapedPath = PathUtilities.EscapeForVerbatimString(dockerfile.FullName);
                 sourceBuilder.AppendLine($"\tpublic static global::System.IO.FileInfo {formattedName} {{ get; }} = new global::System.IO.FileInfo(@\"{escapedPath}\");");
             }
             catch (Exception ex)

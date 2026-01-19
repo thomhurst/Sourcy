@@ -36,9 +36,9 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
                 .DistinctBy(x => x.FullName, PathUtilities.PathComparer)
                 .ToList();
 
-            WriteNpmProjects(context, npmProjects);
-            WriteYarnProjects(context, yarnProjects);
-            WritePnpmProjects(context, pnpmProjects);
+            WriteProjects(context, npmProjects, "Sourcy.Node.Npm", "NpmProjectExtensions.g.cs");
+            WriteProjects(context, yarnProjects, "Sourcy.Node.Yarn", "YarnProjectExtensions.g.cs");
+            WriteProjects(context, pnpmProjects, "Sourcy.Node.Pnpm", "PnpmProjectExtensions.g.cs");
         }
         catch (Exception ex)
         {
@@ -64,13 +64,18 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
         return false;
     }
 
-    private static void WriteNpmProjects(SourceProductionContext context, List<DirectoryInfo> projects)
+    private static void WriteProjects(
+        SourceProductionContext context,
+        List<DirectoryInfo> projects,
+        string @namespace,
+        string filename)
     {
         var sourceBuilder = new StringBuilder();
         var usedIdentifiers = new HashSet<string>();
 
-        sourceBuilder.AppendLine("namespace Sourcy.Node.Npm;");
+        sourceBuilder.AppendLine($"namespace {@namespace};");
         sourceBuilder.AppendLine();
+        sourceBuilder.AppendLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"Sourcy.Node\", \"1.0.0\")]");
         sourceBuilder.AppendLine("internal static class Projects");
         sourceBuilder.AppendLine("{");
 
@@ -82,8 +87,8 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
                     projectDirectory.Name,
                     usedIdentifiers);
 
-                var escapedPath = PathEscaper.EscapeForVerbatimString(projectDirectory.FullName);
-                sourceBuilder.AppendLine($"\tpublic static global::System.IO.DirectoryInfo {formattedName} {{ get; }} = new global::System.IO.DirectoryInfo(@\"{escapedPath}\");");
+                var escapedPath = PathUtilities.EscapeForVerbatimString(projectDirectory.FullName);
+                sourceBuilder.AppendLine($"    public static global::System.IO.DirectoryInfo {formattedName} {{ get; }} = new global::System.IO.DirectoryInfo(@\"{escapedPath}\");");
             }
             catch (Exception ex)
             {
@@ -93,70 +98,6 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
 
         sourceBuilder.AppendLine("}");
 
-        context.AddSource("NpmProjectExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
-    }
-
-    private static void WriteYarnProjects(SourceProductionContext context, List<DirectoryInfo> projects)
-    {
-        var sourceBuilder = new StringBuilder();
-        var usedIdentifiers = new HashSet<string>();
-
-        sourceBuilder.AppendLine("namespace Sourcy.Node.Yarn;");
-        sourceBuilder.AppendLine();
-        sourceBuilder.AppendLine("internal static class Projects");
-        sourceBuilder.AppendLine("{");
-
-        foreach (var projectDirectory in projects)
-        {
-            try
-            {
-                var formattedName = IdentifierHelper.ToValidIdentifier(
-                    projectDirectory.Name,
-                    usedIdentifiers);
-
-                var escapedPath = PathEscaper.EscapeForVerbatimString(projectDirectory.FullName);
-                sourceBuilder.AppendLine($"\tpublic static global::System.IO.DirectoryInfo {formattedName} {{ get; }} = new global::System.IO.DirectoryInfo(@\"{escapedPath}\");");
-            }
-            catch (Exception ex)
-            {
-                context.ReportGenerationError(projectDirectory.Name, ex);
-            }
-        }
-
-        sourceBuilder.AppendLine("}");
-
-        context.AddSource("YarnProjectExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
-    }
-
-    private static void WritePnpmProjects(SourceProductionContext context, List<DirectoryInfo> projects)
-    {
-        var sourceBuilder = new StringBuilder();
-        var usedIdentifiers = new HashSet<string>();
-
-        sourceBuilder.AppendLine("namespace Sourcy.Node.Pnpm;");
-        sourceBuilder.AppendLine();
-        sourceBuilder.AppendLine("internal static class Projects");
-        sourceBuilder.AppendLine("{");
-
-        foreach (var projectDirectory in projects)
-        {
-            try
-            {
-                var formattedName = IdentifierHelper.ToValidIdentifier(
-                    projectDirectory.Name,
-                    usedIdentifiers);
-
-                var escapedPath = PathEscaper.EscapeForVerbatimString(projectDirectory.FullName);
-                sourceBuilder.AppendLine($"\tpublic static global::System.IO.DirectoryInfo {formattedName} {{ get; }} = new global::System.IO.DirectoryInfo(@\"{escapedPath}\");");
-            }
-            catch (Exception ex)
-            {
-                context.ReportGenerationError(projectDirectory.Name, ex);
-            }
-        }
-
-        sourceBuilder.AppendLine("}");
-
-        context.AddSource("PnpmProjectExtensions.g.cs", GetSourceText(sourceBuilder.ToString()));
+        context.AddSource(filename, GetSourceText(sourceBuilder.ToString()));
     }
 }

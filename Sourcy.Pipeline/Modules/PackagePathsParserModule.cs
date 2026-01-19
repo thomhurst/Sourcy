@@ -12,11 +12,15 @@ public class PackagePathsParserModule : Module<List<File>>
     {
         var packPackagesModuleResult = await GetModule<PackProjectsModule>();
 
+        const string packageMarker = "Successfully created package '";
+
         return packPackagesModuleResult.Value!
-            .Select(x => x.StandardOutput)
-            .Select(x => x.Split("Successfully created package '")[1])
-            .Select(x => x.Split("'.")[0])
-            .Select(x => new File(x))
+            .SelectMany(x => x.StandardOutput.Split('\n'))
+            .Select(line => line.Trim())
+            .Where(line => line.Contains(packageMarker))
+            .Select(line => line.Split(packageMarker)[1])
+            .Select(path => path.TrimEnd('\'', '.'))
+            .Select(path => new File(path))
             .ToList();
     }
 }
