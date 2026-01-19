@@ -1,4 +1,5 @@
 using ModularPipelines.Attributes;
+using ModularPipelines.Configuration;
 using ModularPipelines.Context;
 using ModularPipelines.DotNet.Extensions;
 using ModularPipelines.DotNet.Options;
@@ -12,21 +13,20 @@ namespace Sourcy.Pipeline.Modules.LocalMachine;
 [DependsOn<CreateLocalNugetFolderModule>]
 public class AddLocalNugetSourceModule : Module<CommandResult>
 {
-    /// <inheritdoc/>
-    protected override Task<bool> ShouldIgnoreFailures(IPipelineContext context, Exception exception)
-    {
-        return Task.FromResult(exception is CommandException commandException &&
-                               commandException.StandardOutput.Contains("The name specified has already been added to the list of available package sources"));
-    }
+    protected override ModuleConfiguration Configure() => ModuleConfiguration.Create()
+        .WithIgnoreFailuresWhen((_, ex) =>
+            ex is CommandException commandException &&
+            commandException.StandardOutput.Contains("The name specified has already been added to the list of available package sources"))
+        .Build();
 
-    /// <inheritdoc/>
-    protected override async Task<CommandResult?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
-        var localNugetPathResult = await GetModule<CreateLocalNugetFolderModule>();
+        var localNugetPathResult = await context.GetModule<CreateLocalNugetFolderModule>();
 
-        return await context.DotNet().Nuget.Add.Source(new DotNetNugetAddSourceOptions(packageSourcePath: localNugetPathResult.Value.AssertExists())
+        return await context.DotNet().Nuget.Add.Source(new DotNetNugetAddSourceOptions
         {
+            Packagesourcepath = localNugetPathResult.ValueOrDefault.AssertExists(),
             Name = "ModularPipelinesLocalNuGet",
-        }, cancellationToken);
+        }, cancellationToken: cancellationToken);
     }
 }

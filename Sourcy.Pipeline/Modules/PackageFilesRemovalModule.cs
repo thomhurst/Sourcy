@@ -4,9 +4,9 @@ using ModularPipelines.Modules;
 
 namespace Sourcy.Pipeline.Modules;
 
-public class PackageFilesRemovalModule : Module
+public class PackageFilesRemovalModule : Module<bool>
 {
-    protected override async Task<IDictionary<string, object>?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override Task<bool> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         var packageFiles = context.Git().RootDirectory.GetFiles(path => path.Extension is ".nupkg");
 
@@ -15,6 +15,6 @@ public class PackageFilesRemovalModule : Module
             packageFile.Delete();
         }
 
-        return await NothingAsync();
+        return Task.FromResult(true);
     }
 }
