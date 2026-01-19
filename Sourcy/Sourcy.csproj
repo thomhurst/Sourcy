@@ -1,8 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <IsRoslynComponent>true</IsRoslynComponent>
-    <RootNamespace>Sourcy</RootNamespace>
-    <PackageId>Sourcy</PackageId>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- This project exists only for solution organization - it is not packaged -->
+    <IsPackable>false</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
+
+  <!-- Remove Polyfill since this project has no source code to compile -->
+  <ItemGroup>
+    <PackageReference Remove="Polyfill" />
+  </ItemGroup>
+
+  <!-- Reference all generator projects for solution dependency ordering -->
+  <ItemGroup>
+    <ProjectReference Include="..\Sourcy.Git\Sourcy.Git.csproj" />
+    <ProjectReference Include="..\Sourcy.DotNet\Sourcy.DotNet.csproj" />
+    <ProjectReference Include="..\Sourcy.Node\Sourcy.Node.csproj" />
+    <ProjectReference Include="..\Sourcy.Docker\Sourcy.Docker.csproj" />
+  </ItemGroup>
 </Project>
