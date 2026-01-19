@@ -11,7 +11,7 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="ModularPipelines.DotNet" Version="2.42.87" />
     <PackageVersion Include="ModularPipelines.Git" Version="2.42.87" />
-    <PackageVersion Include="Polly" Version="8.5.1" />
+    <PackageVersion Include="Polly" Version="8.6.5" />
     <PackageVersion Include="Polyfill" Version="7.4.0" />
     <PackageVersion Include="Sourcy" Version="0.0.58" />
     <PackageVersion Include="Sourcy.Core" Version="0.0.58" />
