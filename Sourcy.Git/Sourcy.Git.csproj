@@ -1,37 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
     <RootNamespace>Sourcy.Git</RootNamespace>
     <PackageId>Sourcy.Git</PackageId>
   </PropertyGroup>
 
-  <!-- Release tracking files for analyzer diagnostics (linked from Sourcy project) -->
-  <ItemGroup>
-    <AdditionalFiles Include="..\Sourcy\AnalyzerReleases.Shipped.md" Link="AnalyzerReleases.Shipped.md" />
-    <AdditionalFiles Include="..\Sourcy\AnalyzerReleases.Unshipped.md" Link="AnalyzerReleases.Unshipped.md" />
-  </ItemGroup>
+  <!-- Additional dependencies specific to Sourcy.Git -->
   <ItemGroup>
     <PackageReference Include="CliWrap" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; compile; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Polly" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
+
+  <!-- Bundle dependencies with the analyzer -->
   <PropertyGroup>
-    <GetTargetPathDependsOn>
-            $(GetTargetPathDependsOn);GetDependencyTargetPaths
-        </GetTargetPathDependsOn>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
   </PropertyGroup>
+
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(PKGCliWrap)\lib\netstandard2.0\CliWrap.dll" IncludeRuntimeDependency="false" />

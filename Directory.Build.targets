@@ -1,22 +1,46 @@
 <Project>
+    <!-- Common properties for all Roslyn analyzer/source generator projects -->
+    <!-- Note: TargetFramework must remain in each project file as NuGet restore needs it early -->
+    <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true'">
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    </PropertyGroup>
+
+    <!-- Share BaseSourcyGenerator.cs and all utilities with analyzer packages (except Sourcy itself) -->
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
-
         <Compile Include="..\Sourcy\**\*.cs" Exclude="..\Sourcy\obj\**\*.cs" />
-
     </ItemGroup>
 
+    <!-- Sourcy.Core dependency for all projects except itself -->
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
-
         <!-- PrivateAssets="none" ensures Sourcy.Core flows as a dependency to NuGet consumers,
              which imports Sourcy.Core.props for MSBuild-based root detection -->
         <ProjectReference
             Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj"
             PrivateAssets="none" />
-
     </ItemGroup>
 
-    <PropertyGroup
-        Condition="'$(MSBuildProjectName)' != 'Sourcy' and '$(IsRoslynComponent)' == 'true'">
+    <!-- Common package references for all Roslyn analyzer projects -->
+    <ItemGroup Condition="'$(IsRoslynComponent)' == 'true'">
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!-- Analyzer release tracking files (linked from Sourcy project, except for Sourcy itself) -->
+    <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
+        <AdditionalFiles Include="$(MSBuildThisFileDirectory)Sourcy\AnalyzerReleases.Shipped.md" Link="AnalyzerReleases.Shipped.md" />
+        <AdditionalFiles Include="$(MSBuildThisFileDirectory)Sourcy\AnalyzerReleases.Unshipped.md" Link="AnalyzerReleases.Unshipped.md" />
+    </ItemGroup>
+
+    <!-- Sourcy project owns the analyzer release tracking files directly -->
+    <ItemGroup Condition="'$(MSBuildProjectName)' == 'Sourcy'">
+        <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+    </ItemGroup>
+
+    <!-- Analyzer packaging configuration -->
+    <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Sourcy' AND '$(IsRoslynComponent)' == 'true'">
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
