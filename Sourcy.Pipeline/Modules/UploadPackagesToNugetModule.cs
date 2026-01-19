@@ -56,6 +56,7 @@ public class UploadPackagesToNugetModule : Module<CommandResult[]>
                 Path = nugetFile,
                 Source = "https://api.nuget.org/v3/index.json",
                 ApiKey = _nugetSettings.Value.ApiKey!,
+                SkipDuplicate = true,
             }, cancellationToken), cancellationToken: cancellationToken)
             .ProcessOneAtATime();
     }
