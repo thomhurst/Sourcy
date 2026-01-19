@@ -8,6 +8,12 @@
     <RootNamespace>Sourcy.DotNet</RootNamespace>
     <PackageId>Sourcy.DotNet</PackageId>
   </PropertyGroup>
+
+  <!-- Release tracking files for analyzer diagnostics (linked from Sourcy project) -->
+  <ItemGroup>
+    <AdditionalFiles Include="..\Sourcy\AnalyzerReleases.Shipped.md" Link="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="..\Sourcy\AnalyzerReleases.Unshipped.md" Link="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
       <PrivateAssets>all</PrivateAssets>

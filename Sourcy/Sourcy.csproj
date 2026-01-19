@@ -9,6 +9,12 @@
     <PackageId>Sourcy</PackageId>
   </PropertyGroup>
 
+  <!-- Release tracking files for analyzer diagnostics -->
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference
       Include="..\Sourcy.Core\Sourcy.Core.csproj" />
