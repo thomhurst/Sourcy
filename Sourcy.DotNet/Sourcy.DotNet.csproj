@@ -15,7 +15,6 @@
     <AdditionalFiles Include="..\Sourcy\AnalyzerReleases.Unshipped.md" Link="AnalyzerReleases.Unshipped.md" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Sourcy.Core\Sourcy.Core.csproj" PrivateAssets="none" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

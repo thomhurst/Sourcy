@@ -7,8 +7,11 @@
 
     <ItemGroup Condition="'$(MSBuildProjectName)' != 'Sourcy.Core'">
 
+        <!-- PrivateAssets="none" ensures Sourcy.Core flows as a dependency to NuGet consumers,
+             which imports Sourcy.Core.props for MSBuild-based root detection -->
         <ProjectReference
-            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj" />
+            Include="$(MSBuildThisFileDirectory)\Sourcy.Core\Sourcy.Core.csproj"
+            PrivateAssets="none" />
 
     </ItemGroup>
 
