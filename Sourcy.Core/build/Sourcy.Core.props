@@ -164,18 +164,13 @@
     <CompilerVisibleProperty Include="SourcyRootPath" />
   </ItemGroup>
 
-  <!-- Diagnostic output target - runs before build when SourcyDiagnostics=true -->
+  <!-- Diagnostic output target - always outputs when SourcyDiagnostics=true using warnings so they always show -->
   <Target Name="_SourcyDiagnosticOutput" BeforeTargets="BeforeBuild" Condition="'$(SourcyDiagnostics)' == 'true'">
-    <Message Importance="High" Text="SOURCY_DIAG: Project directory: $(MSBuildProjectDirectory)" />
-    <Message Importance="High" Text="SOURCY_DIAG: SourcyRootPath: $(SourcyRootPath)" />
-    <Message Importance="High" Text="SOURCY_DIAG: Detection method: $(_SourcyDetectionMethod)" />
-    <Message Importance="High" Text="SOURCY_DIAG: Parent1: $(_SourcyParent1)" />
-    <Message Importance="High" Text="SOURCY_DIAG: Parent2: $(_SourcyParent2)" />
-    <Message Importance="High" Text="SOURCY_DIAG: Parent3: $(_SourcyParent3)" />
-    <Message Importance="High" Text="SOURCY_DIAG: GitPath0: $(_SourcyGitPath0)" />
-    <Message Importance="High" Text="SOURCY_DIAG: GitPath1: $(_SourcyGitPath1)" />
-    <Message Importance="High" Text="SOURCY_DIAG: GitPath2: $(_SourcyGitPath2)" />
-    <Message Importance="High" Text="SOURCY_DIAG: GitPath3: $(_SourcyGitPath3)" />
+    <Warning Code="SOURCY_DIAG001" Text="Project directory: $(MSBuildProjectDirectory)" />
+    <Warning Code="SOURCY_DIAG002" Text="SourcyRootPath: $(SourcyRootPath)" />
+    <Warning Code="SOURCY_DIAG003" Text="Detection method: $(_SourcyDetectionMethod)" />
+    <Warning Code="SOURCY_DIAG004" Text="Parent1: $(_SourcyParent1) | Parent2: $(_SourcyParent2)" />
+    <Warning Code="SOURCY_DIAG005" Text="GitPath0: $(_SourcyGitPath0) | GitPath1: $(_SourcyGitPath1) | GitPath2: $(_SourcyGitPath2)" />
   </Target>
 
   <!-- Warning if root not found -->
