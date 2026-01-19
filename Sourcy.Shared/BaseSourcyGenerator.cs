@@ -152,15 +152,16 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
         }
 
         // Check cache first to avoid repeated file system traversals
-        if (RootCache.TryGetValue(path, out var cachedRoot))
+        // path is guaranteed non-null at this point due to the check above
+        if (RootCache.TryGetValue(path!, out var cachedRoot))
         {
             return cachedRoot;
         }
 
-        var root = GetRootDirectoryCore(path);
+        var root = GetRootDirectoryCore(path!);
 
         // Cache the result (including null results to avoid repeated failed lookups)
-        RootCache.TryAdd(path, root);
+        RootCache.TryAdd(path!, root);
 
         return root;
     }

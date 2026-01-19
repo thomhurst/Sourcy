@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace Sourcy.Tests;
 
 public class DockerfileTests

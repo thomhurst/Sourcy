@@ -7,8 +7,11 @@ using System.IO;
 
 namespace Sourcy;
 
-[DebuggerDisplay("{Directory,nq}")]
-public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
+/// <summary>
+/// Represents the root directory of a repository for source generation.
+/// </summary>
+[DebuggerDisplay("{Directory.FullName,nq}")]
+public sealed record Root(DirectoryInfo Directory) : IEquatable<Root>
 {
     public IEnumerable<FileInfo> EnumerateFiles(SkippedPathCallback? onSkipped = null)
     {
@@ -86,33 +89,29 @@ public record Root(DirectoryInfo Directory) : IEqualityComparer<Root>
         return Path.GetFileName(filePath);
     }
 
-    public bool Equals(Root? x, Root? y)
+    /// <summary>
+    /// Determines equality based on the directory's full path using platform-appropriate case sensitivity.
+    /// </summary>
+    public bool Equals(Root? other)
     {
-        if (ReferenceEquals(x, y))
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
         {
             return true;
         }
 
-        if (x is null)
-        {
-            return false;
-        }
-
-        if (y is null)
-        {
-            return false;
-        }
-
-        if (x.GetType() != y.GetType())
-        {
-            return false;
-        }
-
-        return x.Directory.FullName.Equals(y.Directory.FullName);
+        return PathUtilities.PathEquals(Directory.FullName, other.Directory.FullName);
     }
 
-    public int GetHashCode(Root obj)
+    /// <summary>
+    /// Returns a hash code based on the directory's full path using platform-appropriate case sensitivity.
+    /// </summary>
+    public override int GetHashCode()
     {
-        return obj.Directory.GetHashCode();
+        return PathUtilities.PathComparer.GetHashCode(Directory.FullName);
     }
 }

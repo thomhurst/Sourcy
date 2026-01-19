@@ -112,12 +112,3 @@ internal static class PathUtilities
         return path.StartsWith(prefix, PathComparison);
     }
 }
-
-/// <summary>
-/// Alias for backward compatibility - redirects to PathUtilities.
-/// </summary>
-internal static class PathEscaper
-{
-    public static string EscapeForVerbatimString(string path) => PathUtilities.EscapeForVerbatimString(path);
-    public static string EscapeForStringLiteral(string value) => PathUtilities.EscapeForStringLiteral(value);
-}
