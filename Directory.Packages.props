@@ -13,12 +13,12 @@
     <PackageVersion Include="ModularPipelines.Git" Version="2.48.30" />
     <PackageVersion Include="Polly" Version="8.6.5" />
     <PackageVersion Include="Polyfill" Version="7.4.0" />
-    <PackageVersion Include="Sourcy" Version="0.7.11" />
-    <PackageVersion Include="Sourcy.Core" Version="0.7.11" />
-    <PackageVersion Include="Sourcy.Docker" Version="0.7.11" />
-    <PackageVersion Include="Sourcy.DotNet" Version="0.7.11" />
-    <PackageVersion Include="Sourcy.Git" Version="0.7.11" />
-    <PackageVersion Include="Sourcy.Node" Version="0.7.11" />
+    <PackageVersion Include="Sourcy" Version="1.0.13" />
+    <PackageVersion Include="Sourcy.Core" Version="1.1.1" />
+    <PackageVersion Include="Sourcy.Docker" Version="1.1.1" />
+    <PackageVersion Include="Sourcy.DotNet" Version="1.1.1" />
+    <PackageVersion Include="Sourcy.Git" Version="1.1.1" />
+    <PackageVersion Include="Sourcy.Node" Version="1.1.1" />
     <PackageVersion Include="TUnit" Version="0.2.195" />
   </ItemGroup>
 </Project>
