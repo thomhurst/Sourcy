@@ -14,7 +14,7 @@ internal class DockerSourceGenerator : BaseSourcyGenerator
     {
         try
         {
-            var dockerfiles = root.EnumerateFiles()
+            var dockerfiles = EnumerateFiles(context, root)
                 .Where(x => x.Name is "Dockerfile")
                 .ToList();
 
