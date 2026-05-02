@@ -350,6 +350,40 @@ public abstract class BaseSourcyGenerator : IIncrementalGenerator
     {
         return SourceText.From(code, Encoding.UTF8);
     }
+
+    protected static IEnumerable<FileInfo> EnumerateFiles(SourceProductionContext context, Root root)
+    {
+        return root.EnumerateFiles(skippedPath => ReportSkippedPath(context, skippedPath));
+    }
+
+    private static void ReportSkippedPath(SourceProductionContext context, SkippedPath skippedPath)
+    {
+        switch (skippedPath.Reason)
+        {
+            case SkipReason.UnauthorizedAccess:
+                context.ReportUnauthorizedAccess(skippedPath.Path);
+                break;
+            case SkipReason.PathTooLong:
+                context.ReportPathTooLong(skippedPath.Path);
+                break;
+            case SkipReason.SymlinkCycle when skippedPath.TargetPath != null:
+                context.ReportSymlinkCycle(skippedPath.Path, skippedPath.TargetPath);
+                break;
+            case SkipReason.MaxDepthReached when skippedPath.Depth.HasValue:
+                context.ReportMaxDepthReached(skippedPath.Path, skippedPath.Depth.Value);
+                break;
+            case SkipReason.CloudPlaceholder:
+                context.ReportCloudPlaceholder(skippedPath.Path);
+                break;
+            case SkipReason.ExcludedDirectory:
+            case SkipReason.HiddenOrSystem:
+            case SkipReason.DuplicateRealPath:
+                break;
+            default:
+                context.ReportFileSkipped(skippedPath.Path, skippedPath.Reason.ToString());
+                break;
+        }
+    }
     
     protected IEnumerable<SourceGeneratedPath> Distinct(Root root, List<FileInfo> files, SourceProductionContext? context = null)
     {
