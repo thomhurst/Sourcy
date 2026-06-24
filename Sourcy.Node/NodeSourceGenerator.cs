@@ -14,22 +14,24 @@ internal class NodeSourceGenerator : BaseSourcyGenerator
     {
         try
         {
+            var files = EnumerateFiles(context, root).ToList();
+
             // Use path-based comparison for Distinct() since DirectoryInfo compares by reference
-            var npmProjects = root.EnumerateFiles()
+            var npmProjects = files
                 .Where(x => x.Name is "package-lock.json")
                 .Where(x => !IsInNodeModules(x))
                 .Select(x => x.Directory!)
                 .DistinctBy(x => x.FullName, PathUtilities.PathComparer)
                 .ToList();
 
-            var yarnProjects = root.EnumerateFiles()
+            var yarnProjects = files
                 .Where(x => x.Name is "yarn.lock")
                 .Where(x => !IsInNodeModules(x))
                 .Select(x => x.Directory!)
                 .DistinctBy(x => x.FullName, PathUtilities.PathComparer)
                 .ToList();
 
-            var pnpmProjects = root.EnumerateFiles()
+            var pnpmProjects = files
                 .Where(x => x.Name is "pnpm-lock.yaml")
                 .Where(x => !IsInNodeModules(x))
                 .Select(x => x.Directory!)

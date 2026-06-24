@@ -19,6 +19,7 @@ public enum SkipReason
     IoError,
     SecurityException,
     SymlinkCycle,
+    DuplicateRealPath,
     MaxDepthReached,
     ExcludedDirectory,
     HiddenOrSystem,
@@ -97,13 +98,6 @@ internal static class SafeWalk
 
                 foreach (var file in files)
                 {
-                    // Skip cloud placeholder files (OneDrive, iCloud, Dropbox)
-                    if (IsCloudPlaceholder(file))
-                    {
-                        onSkipped?.Invoke(new SkippedPath(file.FullName, SkipReason.CloudPlaceholder));
-                        continue;
-                    }
-
                     yield return file;
                 }
             }
@@ -131,14 +125,16 @@ internal static class SafeWalk
 
     public static IEnumerable<DirectoryInfo> EnumerateDirectories(DirectoryInfo directory, SkippedPathCallback? onSkipped = null)
     {
-        // Use a visited set to detect symlink cycles with platform-appropriate case sensitivity
-        var visited = new HashSet<string>(PathUtilities.PathComparer);
-        return EnumerateDirectoriesInternal(directory, visited, 0, onSkipped);
+        // Use real paths to avoid cycles and duplicate traversal through symlinks/junctions.
+        var visitedRealPaths = new HashSet<string>(PathUtilities.PathComparer);
+        var activeRealPaths = new HashSet<string>(PathUtilities.PathComparer);
+        return EnumerateDirectoriesInternal(directory, visitedRealPaths, activeRealPaths, 0, onSkipped);
     }
 
     private static IEnumerable<DirectoryInfo> EnumerateDirectoriesInternal(
         DirectoryInfo directory,
-        HashSet<string> visited,
+        HashSet<string> visitedRealPaths,
+        HashSet<string> activeRealPaths,
         int depth,
         SkippedPathCallback? onSkipped)
     {
@@ -149,7 +145,7 @@ internal static class SafeWalk
             yield break;
         }
 
-        var (shouldSearch, skipReason) = ShouldSearchDirectoryWithReason(directory);
+        var (shouldSearch, skipReason) = ShouldSearchDirectoryWithReason(directory, isRoot: depth == 0);
         if (!shouldSearch)
         {
             if (skipReason.HasValue)
@@ -171,120 +167,88 @@ internal static class SafeWalk
             yield break;
         }
 
-        // Check for cycles (symlink pointing to parent directory)
-        if (!visited.Add(realPath))
+        if (!activeRealPaths.Add(realPath))
         {
             onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.SymlinkCycle, targetPath: realPath));
             yield break;
         }
 
-        yield return directory;
-
-        DirectoryInfo[]? subDirectories = null;
-
         try
         {
-            subDirectories = directory.GetDirectories("*", SearchOption.TopDirectoryOnly);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.UnauthorizedAccess));
-            yield break;
-        }
-        catch (DirectoryNotFoundException)
-        {
-            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.DirectoryNotFound));
-            yield break;
-        }
-        catch (PathTooLongException)
-        {
-            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.PathTooLong));
-            yield break;
-        }
-        catch (IOException)
-        {
-            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.IoError));
-            yield break;
-        }
-        catch (System.Security.SecurityException)
-        {
-            onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.SecurityException));
-            yield break;
-        }
+            if (!visitedRealPaths.Add(realPath))
+            {
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.DuplicateRealPath, targetPath: realPath));
+                yield break;
+            }
 
-        if (subDirectories == null)
-        {
-            yield break;
-        }
+            yield return directory;
 
-        // Sort directories for deterministic output across builds
-        Array.Sort(subDirectories, (a, b) => string.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
-
-        foreach (var folder in subDirectories)
-        {
-            IEnumerable<DirectoryInfo>? innerFolders = null;
+            DirectoryInfo[]? subDirectories = null;
 
             try
             {
-                // Check if this is a symlink/junction - skip if it would cause a cycle
-                if (IsSymbolicLinkOrJunction(folder))
-                {
-                    var targetPath = GetRealPath(folder);
-                    if (visited.Contains(targetPath))
-                    {
-                        onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.SymlinkCycle, targetPath: targetPath));
-                        continue;
-                    }
-
-                    // Mark the symlink target as visited to avoid revisiting it via other symlinks
-                    visited.Add(targetPath);
-                }
-
-                innerFolders = EnumerateDirectoriesInternal(folder, visited, depth + 1, onSkipped);
+                subDirectories = directory.GetDirectories("*", SearchOption.TopDirectoryOnly);
             }
             catch (UnauthorizedAccessException)
             {
-                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.UnauthorizedAccess));
-                continue;
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.UnauthorizedAccess));
+                yield break;
             }
             catch (DirectoryNotFoundException)
             {
-                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.DirectoryNotFound));
-                continue;
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.DirectoryNotFound));
+                yield break;
             }
             catch (PathTooLongException)
             {
-                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.PathTooLong));
-                continue;
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.PathTooLong));
+                yield break;
             }
             catch (IOException)
             {
-                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.IoError));
-                continue;
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.IoError));
+                yield break;
             }
             catch (System.Security.SecurityException)
             {
-                onSkipped?.Invoke(new SkippedPath(folder.FullName, SkipReason.SecurityException));
-                continue;
+                onSkipped?.Invoke(new SkippedPath(directory.FullName, SkipReason.SecurityException));
+                yield break;
             }
 
-            if (innerFolders != null)
+            if (subDirectories == null)
             {
-                foreach (var innerFolder in innerFolders)
+                yield break;
+            }
+
+            // Sort directories for deterministic output and visit concrete directories before links.
+            Array.Sort(subDirectories, CompareDirectoriesForTraversal);
+
+            foreach (var folder in subDirectories)
+            {
+                foreach (var innerFolder in EnumerateDirectoriesInternal(
+                             folder,
+                             visitedRealPaths,
+                             activeRealPaths,
+                             depth + 1,
+                             onSkipped))
                 {
                     yield return innerFolder;
                 }
             }
         }
+        finally
+        {
+            activeRealPaths.Remove(realPath);
+        }
     }
 
     private static bool ShouldSearchDirectory(DirectoryInfo directory)
     {
-        var (shouldSearch, _) = ShouldSearchDirectoryWithReason(directory);
+        var (shouldSearch, _) = ShouldSearchDirectoryWithReason(directory, isRoot: false);
         return shouldSearch;
     }
 
-    private static (bool ShouldSearch, SkipReason? Reason) ShouldSearchDirectoryWithReason(DirectoryInfo directory)
+    private static (bool ShouldSearch, SkipReason? Reason) ShouldSearchDirectoryWithReason(DirectoryInfo directory, bool isRoot)
     {
         try
         {
@@ -296,14 +260,8 @@ internal static class SafeWalk
 
             var attributes = directory.Attributes;
 
-            // Skip hidden directories (but allow on Linux where .folders are common)
-            if ((attributes & FileAttributes.Hidden) != 0 && !RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                return (false, SkipReason.HiddenOrSystem);
-            }
-
-            // Skip system directories
-            if ((attributes & FileAttributes.System) != 0)
+            // Skip system directories below the root. The root was explicitly selected by Sourcy.
+            if (!isRoot && (attributes & FileAttributes.System) != 0)
             {
                 return (false, SkipReason.HiddenOrSystem);
             }
@@ -345,7 +303,7 @@ internal static class SafeWalk
     {
         try
         {
-            var fullPath = directory.FullName;
+            var fullPath = NormalizePathForComparison(directory.FullName);
 
             // If this is a symlink/reparse point, try to resolve the target
             if (IsSymbolicLinkOrJunction(directory))
@@ -353,14 +311,8 @@ internal static class SafeWalk
                 var resolvedPath = ResolveSymlinkTarget(directory);
                 if (!string.IsNullOrEmpty(resolvedPath))
                 {
-                    fullPath = resolvedPath!;
+                    fullPath = NormalizePathForComparison(resolvedPath!);
                 }
-            }
-
-            // On case-insensitive platforms, normalize to lowercase for consistent comparison
-            if (!PathUtilities.IsCaseSensitive)
-            {
-                fullPath = fullPath.ToLowerInvariant();
             }
 
             return fullPath;
@@ -369,6 +321,56 @@ internal static class SafeWalk
         {
             return directory.FullName;
         }
+    }
+
+    private static int CompareDirectoriesForTraversal(DirectoryInfo left, DirectoryInfo right)
+    {
+        var leftIsLink = IsSymbolicLinkOrJunction(left);
+        var rightIsLink = IsSymbolicLinkOrJunction(right);
+
+        if (leftIsLink != rightIsLink)
+        {
+            return leftIsLink ? 1 : -1;
+        }
+
+        return string.Compare(left.FullName, right.FullName, StringComparison.Ordinal);
+    }
+
+    private static string NormalizePathForComparison(string path)
+    {
+        try
+        {
+            path = Path.GetFullPath(path);
+        }
+        catch
+        {
+            // Use the original string if the platform cannot normalize it.
+        }
+
+        return TrimEndingDirectorySeparator(path);
+    }
+
+    private static string TrimEndingDirectorySeparator(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return path;
+        }
+
+        var root = Path.GetPathRoot(path);
+        var rootLength = root?.Length ?? 0;
+
+        while (path.Length > rootLength && IsDirectorySeparator(path[path.Length - 1]))
+        {
+            path = path.Substring(0, path.Length - 1);
+        }
+
+        return path;
+    }
+
+    private static bool IsDirectorySeparator(char value)
+    {
+        return value == Path.DirectorySeparatorChar || value == Path.AltDirectorySeparatorChar;
     }
 
     /// <summary>
@@ -487,39 +489,4 @@ internal static class SafeWalk
         }
     }
 
-    /// <summary>
-    /// Checks if a file is a cloud placeholder (OneDrive, iCloud, Dropbox, etc.).
-    /// Cloud placeholders are files that exist in the cloud but aren't downloaded locally.
-    /// Accessing them can trigger downloads or fail unexpectedly.
-    /// </summary>
-    private static bool IsCloudPlaceholder(FileInfo file)
-    {
-        try
-        {
-            var attributes = file.Attributes;
-
-            // FileAttributes.Offline indicates the file data is not immediately available
-            // This is commonly used by cloud sync providers for placeholder files
-            if ((attributes & FileAttributes.Offline) != 0)
-            {
-                return true;
-            }
-
-            // ReparsePoint can indicate cloud placeholders on Windows (OneDrive, etc.)
-            // Combined with SparseFile, this often indicates a cloud placeholder
-            if ((attributes & FileAttributes.ReparsePoint) != 0 &&
-                (attributes & FileAttributes.SparseFile) != 0)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        catch
-        {
-            // If we can't read attributes, assume it's not a placeholder
-            // The file might fail later but we'll handle that separately
-            return false;
-        }
-    }
 }
