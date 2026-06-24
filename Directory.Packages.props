@@ -20,6 +20,6 @@
     <PackageVersion Include="Sourcy.DotNet" Version="1.1.1" />
     <PackageVersion Include="Sourcy.Git" Version="1.1.1" />
     <PackageVersion Include="Sourcy.Node" Version="1.1.1" />
-    <PackageVersion Include="TUnit" Version="0.2.195" />
+    <PackageVersion Include="TUnit" Version="0.90.45" />
   </ItemGroup>
 </Project>
