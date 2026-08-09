@@ -18,7 +18,7 @@ internal class DotNetSourceGenerator : BaseSourcyGenerator
 
         try
         {
-            foreach (var file in root.EnumerateFiles())
+            foreach (var file in EnumerateFiles(context, root))
             {
                 try
                 {
