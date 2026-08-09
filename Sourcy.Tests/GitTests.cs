@@ -15,9 +15,7 @@ public class GitTests
     {
         var branchName = Git.BranchName;
 
-        await Assert.That(branchName)
-            .IsNotNullOrWhitespace()
-            .And
-            .EndsWith(GitVersionInformation.BranchName);
+        await Assert.That(string.IsNullOrWhiteSpace(branchName)).IsFalse();
+        await Assert.That(branchName).EndsWith(GitVersionInformation.BranchName);
     }
 }
