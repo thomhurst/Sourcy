@@ -57,6 +57,9 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event.inputs.publish-packages == 'true'
     environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Pull Requests' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v7
@@ -77,9 +80,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      - name: NuGet login
+        if: ${{ github.ref == 'refs/heads/main' && github.event.inputs.publish-packages == 'true' }}
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Run Pipeline
         run: dotnet run -c Release
         working-directory: "Sourcy.Pipeline"
         env:
-          NuGet__ApiKey: ${{ secrets.NUGET__APIKEY }}
+          NuGet__ApiKey: ${{ steps.login.outputs.NUGET_API_KEY }}
           NuGet__ShouldPublish: ${{ github.event.inputs.publish-packages || false }}
