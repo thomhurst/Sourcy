@@ -1,15 +1,13 @@
+using ModularPipelines;
 using ModularPipelines.Context;
-using ModularPipelines.DotNet.Extensions;
 using ModularPipelines.DotNet.Options;
-using ModularPipelines.Models;
-using ModularPipelines.Modules;
-using File = ModularPipelines.FileSystem.File;
+using File = ModularPipelines.FileSystem.FilePath;
 
 namespace Sourcy.Pipeline.Modules;
 
 public class RunUnitTestsModule : Module<CommandResult>
 {
-    protected override async Task<CommandResult?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         return await Run(context, DotNet.Projects.Sourcy_Tests, cancellationToken);
     }
@@ -21,6 +19,6 @@ public class RunUnitTestsModule : Module<CommandResult>
             Project = unitTestProjectFile.Path
         };
 
-        return await context.DotNet().Test(dotNetTestOptions, cancellationToken: cancellationToken);
+        return await context.Tools.DotNet.TestAsync(dotNetTestOptions, cancellationToken: cancellationToken);
     }
 }
