@@ -1,11 +1,8 @@
-using ModularPipelines.Attributes;
-using ModularPipelines.Configuration;
+using ModularPipelines;
 using ModularPipelines.Context;
-using ModularPipelines.Git.Attributes;
-using ModularPipelines.Git.Extensions;
+using ModularPipelines.Exceptions;
+using ModularPipelines.Git;
 using ModularPipelines.Git.Options;
-using ModularPipelines.Models;
-using ModularPipelines.Modules;
 
 namespace Sourcy.Pipeline.Modules;
 
@@ -14,34 +11,34 @@ namespace Sourcy.Pipeline.Modules;
 [DependsOn<NugetVersionGeneratorModule>]
 public class PushVersionTagModule : Module<CommandResult>
 {
-    protected override ModuleConfiguration Configure() => ModuleConfiguration.Create()
-        .WithSkipWhen(async ctx =>
+    protected override void Configure(ModuleConfigurationBuilder module) => module
+        .WithSkipWhen(async (ctx, _) =>
         {
             var uploadModule = await ctx.GetModule<UploadPackagesToNugetModule>();
-            return uploadModule.IsSkipped
+            return uploadModule is ModuleResult<CommandResult[]>.Skipped
                 ? SkipDecision.Skip("UploadPackagesToNugetModule was skipped")
                 : SkipDecision.DoNotSkip;
         })
-        .WithIgnoreFailuresWhen(async (ctx, ex) =>
+        .WithIgnoreFailuresWhen(async (ctx, ex, _) =>
         {
             var versionModule = await ctx.GetModule<NugetVersionGeneratorModule>();
-            return ex.Message.Contains($"tag 'v{versionModule.ValueOrDefault}' already exists");
-        })
-        .Build();
+            return ex is CommandException commandException &&
+                   commandException.Result.StandardError.Contains($"tag 'v{versionModule.ValueOrDefault}' already exists");
+        });
 
-    protected override async Task<CommandResult?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         var versionModule = await context.GetModule<NugetVersionGeneratorModule>();
         var version = versionModule.ValueOrDefault!;
 
-        await context.Git().Commands.Tag(new GitTagOptions
+        await context.Tools.Git.Commands.Branches.TagAsync(new GitTagOptions
         {
             TagName = $"v{version}",
-        }, token: cancellationToken);
+        }, cancellationToken: cancellationToken);
 
-        return await context.Git().Commands.Push(new GitPushOptions
+        return await context.Tools.Git.Commands.Remotes.PushAsync(new GitPushOptions
         {
             Tags = true
-        }, token: cancellationToken);
+        }, cancellationToken: cancellationToken);
     }
 }

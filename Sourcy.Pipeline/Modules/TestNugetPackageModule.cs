@@ -1,10 +1,7 @@
 using EnumerableAsyncProcessor.Extensions;
-using ModularPipelines.Attributes;
+using ModularPipelines;
 using ModularPipelines.Context;
-using ModularPipelines.DotNet.Extensions;
 using ModularPipelines.DotNet.Options;
-using ModularPipelines.Models;
-using ModularPipelines.Modules;
 using Sourcy.Pipeline.Modules.LocalMachine;
 
 namespace Sourcy.Pipeline.Modules;
@@ -15,7 +12,7 @@ public class TestNugetPackageModule : Module<CommandResult[]>
 {
     private readonly string[] _frameworks = ["net8.0"];
 
-    protected override async Task<CommandResult[]?> ExecuteAsync(IModuleContext context,
+    protected override async Task<CommandResult[]> ExecuteAsync(IModuleContext context,
         CancellationToken cancellationToken)
     {
         var version = await context.GetModule<NugetVersionGeneratorModule>();
@@ -23,8 +20,8 @@ public class TestNugetPackageModule : Module<CommandResult[]>
         var project = DotNet.Projects.Sourcy_NuGet_Tests;
 
         return await _frameworks.SelectAsync(framework =>
-                context.SubModule(framework, () =>
-                    context.DotNet().Run(new DotNetRunOptions
+                context.RunSubModuleAsync(framework, token =>
+                    context.Tools.DotNet.RunAsync(new DotNetRunOptions
                     {
                         Project = project.FullName,
                         Framework = framework,
@@ -33,8 +30,8 @@ public class TestNugetPackageModule : Module<CommandResult[]>
                             new KeyValue("SourcyVersion", version.ValueOrDefault!),
                             new KeyValue("SourcyDiagnostics", "true")
                         ]
-                    }, cancellationToken: cancellationToken)
-                )
+                    }, cancellationToken: token)
+                , cancellationToken)
             , cancellationToken: cancellationToken).ProcessOneAtATime();
     }
 }
