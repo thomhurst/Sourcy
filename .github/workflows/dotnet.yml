@@ -56,7 +56,6 @@ jobs:
 
   pipeline:
     needs: test
-    if: github.ref == 'refs/heads/main' || github.event.inputs.publish-packages == 'true'
     environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Pull Requests' }}
     runs-on: ubuntu-latest
     permissions:
