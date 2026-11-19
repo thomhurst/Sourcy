@@ -1,12 +1,9 @@
 using EnumerableAsyncProcessor.Extensions;
-using ModularPipelines.Attributes;
+using ModularPipelines;
 using ModularPipelines.Context;
-using ModularPipelines.DotNet.Extensions;
 using ModularPipelines.DotNet.Options;
-using ModularPipelines.Models;
-using ModularPipelines.Modules;
 using Sourcy.DotNet;
-using File = ModularPipelines.FileSystem.File;
+using File = ModularPipelines.FileSystem.FilePath;
 
 namespace Sourcy.Pipeline.Modules;
 
@@ -15,7 +12,7 @@ namespace Sourcy.Pipeline.Modules;
 [DependsOn<RunUnitTestsModule>]
 public class PackProjectsModule : Module<CommandResult[]>
 {
-    protected override async Task<CommandResult[]?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult[]> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         var packageVersion = await context.GetModule<NugetVersionGeneratorModule>();
 
@@ -36,7 +33,7 @@ public class PackProjectsModule : Module<CommandResult[]>
 
     private static async Task<CommandResult> Pack(IModuleContext context, File projectFile, string packageVersion, CancellationToken cancellationToken)
     {
-        return await context.DotNet().Pack(new DotNetPackOptions
+        return await context.Tools.DotNet.PackAsync(new DotNetPackOptions
         {
             ProjectSolution = projectFile.Path,
             Configuration = "Release",

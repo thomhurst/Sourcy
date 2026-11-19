@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ModularPipelines;
-using ModularPipelines.Extensions;
 using ModularPipelines.Options;
 using Sourcy.Pipeline.Modules;
 using Sourcy.Pipeline.Modules.LocalMachine;
@@ -19,21 +18,21 @@ builder.Services.Configure<NuGetSettings>(builder.Configuration.GetSection("NuGe
 
 if (!builder.Environment.IsDevelopment())
 {
-    builder.Services.AddModule<UploadPackagesToNugetModule>();
-    builder.Services.AddModule<PushVersionTagModule>();
-    builder.Services.AddModule<CreateReleaseModule>();
+    builder.AddModule<UploadPackagesToNugetModule>();
+    builder.AddModule<PushVersionTagModule>();
+    builder.AddModule<CreateReleaseModule>();
 }
 
-builder.Services.AddModule<CreateLocalNugetFolderModule>();
-builder.Services.AddModule<AddLocalNugetSourceModule>();
-builder.Services.AddModule<UploadPackagesToLocalNuGetModule>();
-builder.Services.AddModule<RunUnitTestsModule>();
-builder.Services.AddModule<NugetVersionGeneratorModule>();
-builder.Services.AddModule<PackProjectsModule>();
-builder.Services.AddModule<PackageFilesRemovalModule>();
-builder.Services.AddModule<PackagePathsParserModule>();
-builder.Services.AddModule<TestNugetPackageModule>();
+builder.AddModule<CreateLocalNugetFolderModule>();
+builder.AddModule<AddLocalNugetSourceModule>();
+builder.AddModule<UploadPackagesToLocalNuGetModule>();
+builder.AddModule<RunUnitTestsModule>();
+builder.AddModule<NugetVersionGeneratorModule>();
+builder.AddModule<PackProjectsModule>();
+builder.AddModule<PackageFilesRemovalModule>();
+builder.AddModule<PackagePathsParserModule>();
+builder.AddModule<TestNugetPackageModule>();
 
-builder.Options.ExecutionMode = ExecutionMode.WaitForAllModules;
+builder.ConfigureOptions(options => options with { FailureMode = FailureMode.ContinueOnFailure });
 
-await builder.Build().RunAsync();
+await builder.RunAsync();

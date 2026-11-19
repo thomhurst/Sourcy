@@ -1,15 +1,14 @@
 using Microsoft.Extensions.Logging;
+using ModularPipelines;
 using ModularPipelines.Context;
-using ModularPipelines.Git.Extensions;
-using ModularPipelines.Modules;
 
 namespace Sourcy.Pipeline.Modules;
 
 public class NugetVersionGeneratorModule : Module<string>
 {
-    protected override async Task<string?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
+    protected override async Task<string> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
-        var gitVersionInformation = await context.Git().Versioning.GetGitVersioningInformation();
+        var gitVersionInformation = await context.Tools.Git.Versioning.GetVersioningInformationAsync(cancellationToken);
 
         context.Logger.LogInformation("NuGet Version to Package: {Version}", gitVersionInformation.SemVer);
 
